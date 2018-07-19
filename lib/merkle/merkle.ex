@@ -19,7 +19,7 @@ defmodule Merkle do
 
   @spec build(Merkle.t(), list(integer())) :: Merkle.t()
   def build(tree, data) do
-    Map.put(tree, :root, build(data))
+    %Merkle{root: build(data), hash_fn: tree.hash_fn, size: length(data)}
   end
 
   @spec build(list(integer())) :: Bargad.Node.t()
@@ -101,42 +101,6 @@ defmodule Merkle do
     end
   end
 
-  def consistency_proof(%Merkle{root: root, hash_fn: _, size: _}, m) do
-    leaves = get_leaves(root)
-    subproof(m,leaves,true)
-  end
-
-  defp subproof(m, leaves, true) when length(leaves) == m do
-  end
-
-  defp subproof(m, leaves, false) when length(leaves) == m do
-    [mth(leaves)]
-  end
-
-  defp subproof(m, leaves, _) do
-      n = length(leaves)
-      k = closest_pow_2(n)
-      if(m<=k) do
-        subproof(m,Enum.slice(leaves,0..(k-1)),false) ++ [mth(Enum.slice(leaves,k..(n-1)))]
-      else
-        subproof(m-k,Enum.slice(leaves,k..(n-1)),false) ++ [mth(Enum.slice(leaves,0..(k-1)))]
-      end
-  end
-
-  def get_leaves(%Bargad.Node{hash: x, children: nil, metadata: y}) do
-    [x]
-  end
-
-  def get_leaves(%Bargad.Node{hash: _, children: [first, second], metadata: _}) do
-    get_leaves(first) ++ get_leaves(second)
-  end
-
-  
-  def verify_consistency_proof(tree) do
-    
-  end
-
-
   defp audit_tree(%Bargad.Node{hash: x, children: nil, metadata: y}, _) do
     IO.puts x <> " || " <> to_string(y)
   end
@@ -161,22 +125,43 @@ defmodule Merkle do
     end
   end
 
-  def mth([x | []]) do
-    to_string(x)
+  def consistency_Proof(%Merkle{root: root, hash_fn: _, size: size}, m) do
+    l = :math.ceil(:math.log2(size))
+    t = trunc(:math.log2(m))
+    consistency_Proof(nil, root, {l, t, m, size})
+  end 
+
+  def consistency_Proof(_, {_, _, 0, _}) do
+    []
   end
 
-  def mth(list) do
-    # k < n <= 2k
-    n = length(list)
-    p = :math.log2(n)
-
-    if :math.ceil(p) - p == 0 do
-      k = trunc(:math.pow(2, p - 1))
-    else
-      k = trunc(:math.pow(2, trunc(p)))
-    end
-
-    :crypto.hash(:sha, mth(Enum.slice(list, 0..(k - 1))) <> mth(Enum.slice(list, k..(n - 1))))
-    |> Base.encode16()
+  def consistency_Proof(sibling, %Bargad.Node{ hash: hash, children: nil, metadata: _}, _) do
+    [hash]
   end
+
+  def consistency_Proof(sibling, %Bargad.Node{ hash: hash, children: [left , right], metadata: _}, {l, t, m, size}) when l==t do
+    size = trunc(:math.pow(2,l))
+    m = m - trunc(:math.pow(2,l))
+    l = :math.ceil(:math.log2(size))
+    t = trunc(:math.log2(m))
+    [ hash | consistency_Proof(nil, sibling, {l, t, m, size})]
+  end
+
+  def consistency_Proof(sibling, %Bargad.Node{ hash: _, children: [left , right], metadata: _}, {l, t, m, size}) do
+      consistency_Proof(right, left, {l-1, t, m, size})
+  end
+
+
+  def verify_consistency_proof([]) do
+    
+  end
+
+  def verify_consistency_proof([first, second]) do
+    :crypto.hash(:sha, first <> second) |> Base.encode16()
+  end
+
+  def verify_consistency_proof([head | tail]) do
+    :crypto.hash(:sha, head <> verify_consistency_proof(tail)) |> Base.encode16()
+  end
+
 end
