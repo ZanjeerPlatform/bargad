@@ -103,6 +103,14 @@ defmodule Merkle do
     end
   end
 
+  def verify_audit_proof(tree, proof, value) do
+    if( tree.root.hash == verify_audit_proof(make_hash(value), proof)) do
+      true
+    else 
+      false
+    end
+  end
+
   defp audit_tree(%Bargad.Node{hash: x, children: nil, metadata: y, size: _}, _) do
     IO.puts x <> " || " <> to_string(y)
   end
@@ -166,6 +174,14 @@ defmodule Merkle do
     :crypto.hash(:sha, head <> verify_consistency_proof(tail)) |> Base.encode16()
   end
 
+  def verify_consistency_proof(proof,old_root_hash) do
+    hash = verify_consistency_proof(proof)
+    if (hash == old_root_hash) do
+      true
+    else false
+    end
+  end
+
   def insert(parent, %Bargad.Node{ hash: hash, children: nil, metadata: m, size: size}, x, l, "L")  do
     left = %Bargad.Node{ hash: hash, children: nil, metadata: m, size: size}
     make_inner_node(left,List.last(parent.children))
@@ -188,6 +204,10 @@ defmodule Merkle do
     make_inner_node(left,right)
   end
 
+  def insert(%Merkle{root: nil, hash_fn: hash_fn, size: _}, x) do
+    %Merkle{root: make_leaf_node(x), hash_fn: hash_fn, size: 1}
+  end
+
   def insert(%Merkle{root: root, hash_fn: hash_fn, size: size}, x) do
     l = :math.ceil(:math.log2(size))
     
@@ -205,6 +225,8 @@ defmodule Merkle do
     end
 
   end
+
+  
 
   def make_leaf_node(x) do
     %Bargad.Node{ hash: make_hash(x), 
