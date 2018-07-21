@@ -27,7 +27,8 @@ defmodule Merkle do
     %Bargad.Node{
       hash: :crypto.hash(:sha, to_string(x)) |> Base.encode16(),
       children: nil,
-      metadata: x
+      metadata: x,
+      size: 1
     }
   end
 
@@ -41,7 +42,8 @@ defmodule Merkle do
     %Bargad.Node{
       hash: :crypto.hash(:sha, left_child.hash <> right_child.hash) |> Base.encode16(),
       children: [left_child, right_child],
-      metadata: to_string(left_child.metadata) <> "-" <> to_string(right_child.metadata)
+      metadata: to_string(left_child.metadata) <> "-" <> to_string(right_child.metadata),
+      size: left_child.size + right_child.size
     }
   end
 
@@ -62,7 +64,7 @@ defmodule Merkle do
     end
   end
 
-  defp audit_proof(parent, %Bargad.Node{hash: x, children: nil, metadata: _}, leaf_hash) do
+  defp audit_proof(parent, %Bargad.Node{hash: x, children: nil, metadata: _, size: _}, leaf_hash) do
     if leaf_hash == x do
       [:found]
     else
@@ -101,11 +103,11 @@ defmodule Merkle do
     end
   end
 
-  defp audit_tree(%Bargad.Node{hash: x, children: nil, metadata: y}, _) do
+  defp audit_tree(%Bargad.Node{hash: x, children: nil, metadata: y, size: _}, _) do
     IO.puts x <> " || " <> to_string(y)
   end
 
-  defp audit_tree(%Bargad.Node{hash: x, children: [left,right], metadata: y}, _) do
+  defp audit_tree(%Bargad.Node{hash: x, children: [left,right], metadata: y, size: _}, _) do
       IO.puts x <> " || " <> y
       audit_tree(left,0)
       audit_tree(right,0)
@@ -135,11 +137,11 @@ defmodule Merkle do
     []
   end
 
-  def consistency_Proof(sibling, %Bargad.Node{ hash: hash, children: nil, metadata: _}, _) do
+  def consistency_Proof(sibling, %Bargad.Node{ hash: hash, children: nil, metadata: _, size: _}, _) do
     [hash]
   end
 
-  def consistency_Proof(sibling, %Bargad.Node{ hash: hash, children: [left , right], metadata: _}, {l, t, m, size}) when l==t do
+  def consistency_Proof(sibling, %Bargad.Node{ hash: hash, children: [left , right], metadata: _, size: _}, {l, t, m, size}) when l==t do
     size = trunc(:math.pow(2,l))
     m = m - trunc(:math.pow(2,l))
     l = :math.ceil(:math.log2(size))
@@ -147,7 +149,7 @@ defmodule Merkle do
     [ hash | consistency_Proof(nil, sibling, {l, t, m, size})]
   end
 
-  def consistency_Proof(sibling, %Bargad.Node{ hash: _, children: [left , right], metadata: _}, {l, t, m, size}) do
+  def consistency_Proof(sibling, %Bargad.Node{ hash: _, children: [left , right], metadata: _, size: _}, {l, t, m, size}) do
       consistency_Proof(right, left, {l-1, t, m, size})
   end
 
@@ -162,6 +164,64 @@ defmodule Merkle do
 
   def verify_consistency_proof([head | tail]) do
     :crypto.hash(:sha, head <> verify_consistency_proof(tail)) |> Base.encode16()
+  end
+
+  def insert(parent, %Bargad.Node{ hash: hash, children: nil, metadata: m, size: size}, x, l, "L")  do
+    left = %Bargad.Node{ hash: hash, children: nil, metadata: m, size: size}
+    make_inner_node(left,List.last(parent.children))
+  end
+
+  def insert(parent, %Bargad.Node{ hash: hash, children: nil, metadata: m, size: size}, x, l, "R")  do
+    left = %Bargad.Node{ hash: hash, children: nil, metadata: m, size: size}
+    right = make_leaf_node(x)
+    make_inner_node(left,right)
+  end
+
+  def insert(parent, %Bargad.Node{ hash: hash, children: [left, right], metadata: m, size: size}, x, l, d)  do
+    root = %Bargad.Node{ hash: hash, children: [left, right], metadata: m, size: size}
+    if left.size < :math.pow(2,l-1) do
+      left = insert(root, left, x, l-1,"L")
+      right = make_leaf_node(x)
+    else
+      right = insert(root, right, x, l-1,"R")
+    end
+    make_inner_node(left,right)
+  end
+
+  def insert(%Merkle{root: root, hash_fn: hash_fn, size: size}, x) do
+    l = :math.ceil(:math.log2(size))
+    
+    if size == :math.pow(2,l) do
+      %Merkle{root: make_inner_node(root, make_leaf_node(x)), hash_fn: hash_fn, size: size + 1}
+    else
+      [left, right] = root.children
+      if left.size < :math.pow(2,l-1) do
+        left = insert(root, left, x, l-1,"L")
+      else
+        right = insert(root, right, x, l-1,"R" )
+      end
+      root = make_inner_node(left,right)
+      %Merkle{root: root, hash_fn: hash_fn, size: size + 1}
+    end
+
+  end
+
+  def make_leaf_node(x) do
+    %Bargad.Node{ hash: make_hash(x), 
+                  children: nil, 
+                  metadata: x, 
+                  size: 1}
+  end
+
+  def make_inner_node(left_child,right_child) do
+    %Bargad.Node{ hash: make_hash(left_child.hash<>right_child.hash),
+                  children: [left_child, right_child],
+                  metadata: to_string(left_child.metadata) <> "-" <> to_string(right_child.metadata),
+                  size: left_child.size + right_child.size}
+  end
+
+  def make_hash(x) do
+    :crypto.hash(:sha, to_string(x)) |> Base.encode16()
   end
 
 end
