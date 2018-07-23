@@ -1,0 +1,19 @@
+message Tree {
+
+  enum TreeType {
+   LOG = 1;
+   MAP = 2;
+  }
+
+  enum HashFunction {
+  SHA1 = 1;
+  SHA2 = 2;
+  }
+
+  required int64 treeId = 1;
+  required TreeType treeType = 2;
+  required HashFunction hashFunction = 3;
+  required bytes root = 4;
+  optional string treeName = 5;
+
+}
