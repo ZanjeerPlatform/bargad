@@ -1,11 +1,11 @@
 defmodule Bargad.Log do
 
-    def new() do
-        Merkle.new()
+    def new(tree_name, hash_function, backend) do
+        Merkle.new(:LOG, tree_name, hash_function, backend)
     end
 
-    def build(values) do
-        Merkle.new() |> Merkle.build(values)
+    def build(tree_name, hash_function, backend, values) do
+        new(tree_name, hash_function, backend) |> Merkle.build(values)
     end
 
     def insert(log, value) do
@@ -21,7 +21,7 @@ defmodule Bargad.Log do
     end
 
     def verify_consistency_proof(log, proof, old_root_hash) do
-        Merkle.verify_consistency_proof(proof,old_root_hash)
+        Merkle.verify_consistency_proof(log, proof, old_root_hash)
     end
 
     def verify_audit_proof(log,proof,value) do

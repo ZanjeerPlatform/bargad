@@ -1,6 +1,7 @@
 message Node {
-  required bytes hash = 1;
-  repeated bytes children = 2;
-  required int64 size = 3;
-  optional bytes metadata = 4;
+  required int64 treeId = 1;
+  required bytes hash = 2;
+  repeated bytes children = 3;
+  required int64 size = 4;
+  optional bytes metadata = 5;
 }

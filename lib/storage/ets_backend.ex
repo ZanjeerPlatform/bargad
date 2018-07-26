@@ -1,12 +1,20 @@
 defmodule ETSBackend do
-    @behaviour 
+    @behaviour Storage
 
-    def get_node(store, key) do
-        #:ets.lookup(store.table, key)
+    def init_backend(tree) do
+        nodes_table = String.to_atom(Integer.to_string(tree.treeId) <> "_" <> "nodes")
+        :ets.new(nodes_table, [:set, :protected, :named_table])
+        backend = tree.backend ++ [{"nodes_table",Atom.to_string(nodes_table)}]
+        Map.put(tree, :backend, backend)
     end
 
-    def set_node(store, key, value) do
-        #:ets.insert_new(store.table, value)
+    def get_node(backend, key) do
+       [{_, value}]  = :ets.lookup(String.to_existing_atom(backend["nodes_table"]), key)
+       value
+    end
+
+    def set_node(backend, key, value) do
+        :ets.insert_new(String.to_existing_atom(backend["nodes_table"]), {key, value})
     end
 
 end
