@@ -1,10 +1,16 @@
 defmodule Merkle do
 
+  @type tree :: Bargad.Types.tree
+  @type tree_node :: Bargad.Types.tree_node
+
+
+  @spec new(Bargad.Types.tree_type, binary, Bargad.Types.hash_algorithm, Bargad.Types.backend) :: Bargad.Types.tree
   def new(tree_type, tree_name, hash_function, backend) do
     tree = Bargad.Utils.make_tree(tree_type, tree_name, hash_function, backend) |>  backend.init_backend()
     Map.put(tree, :root, Bargad.Utils.make_hash(tree,<<>>)) |> Map.put(:size, 0)
   end
 
+  @spec build(Bargad.Types.tree, Bargad.Types.values) :: Bargad.Types.tree
   def build(tree, data) do
     Map.put(tree, :root, build(tree, data, 0).hash) |> Map.put(:size, length(data))
   end
@@ -33,6 +39,7 @@ defmodule Merkle do
     node
   end
 
+  @spec audit_proof(Bargad.Types.tree, binary) :: Bargad.Types.audit_proof
   def audit_proof(tree, leaf_hash) do
 
     root =  Bargad.Utils.get_node(tree,tree.root)
@@ -54,6 +61,7 @@ defmodule Merkle do
     end
   end
 
+  @spec audit_proof(Bargad.Types.tree, Bargad.Types.tree_node, Bargad.Types.tree_node, binary) :: atom
   defp audit_proof(_, _, %Bargad.Nodes.Node{treeId: _, hash: x, children: [], metadata: _, size: _}, leaf_hash) do
     if leaf_hash == x do
       [:found]
@@ -86,6 +94,7 @@ defmodule Merkle do
     leaf_hash
   end
 
+  @spec verify_audit_proof(binary, Bargad.Types.audit_proof, Bargad.Types.tree, term) :: binary
   defp verify_audit_proof(leaf_hash, [{hash, direction} | t], tree, _) do
     case direction do
       "L" -> Bargad.Utils.make_hash(tree, hash <> leaf_hash) |> verify_audit_proof(t, tree,0)
@@ -93,6 +102,7 @@ defmodule Merkle do
     end
   end
 
+  @spec verify_audit_proof(Bargad.Types.tree, Bargad.Types.audit_proof, binary) :: boolean
   def verify_audit_proof(tree, proof, leaf_hash) do
     if( tree.root == verify_audit_proof(leaf_hash, proof, tree,0)) do
       true
@@ -118,33 +128,34 @@ defmodule Merkle do
     audit_tree(tree,root,0)
   end
 
-  def consistency_Proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root,  size: _, hashFunction: _}, m) do
+  @spec consistency_proof(Bargad.Types.tree, pos_integer) :: Bargad.Types.consistency_proof
+  def consistency_proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root,  size: _, hashFunction: _}, m) do
     root = Bargad.Utils.get_node(tree,root)
     l = :math.ceil(:math.log2(root.size))
     t = trunc(:math.log2(m))
-    consistency_Proof(tree, nil, root, {l, t, m, root.size})
+    consistency_proof(tree, nil, root, {l, t, m, root.size})
   end 
 
-  defp consistency_Proof(_, _, {_, _, 0, _}) do
+  defp consistency_proof(_, _, {_, _, 0, _}) do
     []
   end
 
-  defp consistency_Proof(_, _, %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: _, size: _}, _) do
+  defp consistency_proof(_, _, %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: _, size: _}, _) do
     [hash]
   end
 
-  defp consistency_Proof(tree, sibling, %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [_ , _], metadata: _, size: _}, {l, t, m, _}) when l==t do
+  defp consistency_proof(tree, sibling, %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [_ , _], metadata: _, size: _}, {l, t, m, _}) when l==t do
     size = trunc(:math.pow(2,l))
     m = m - trunc(:math.pow(2,l))
     l = :math.ceil(:math.log2(size))
     t = trunc(:math.log2(m))
-    [ hash | consistency_Proof(tree, nil, sibling, {l, t, m, size})]
+    [ hash | consistency_proof(tree, nil, sibling, {l, t, m, size})]
   end
 
   defp consistency_Proof(tree, _, %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left , right], metadata: _, size: _}, {l, t, m, size}) do 
     left = Bargad.Utils.get_node(tree,left)
     right = Bargad.Utils.get_node(tree,right)
-    consistency_Proof(tree, right, left, {l-1, t, m, size})
+    consistency_proof(tree, right, left, {l-1, t, m, size})
   end
 
   defp verify_consistency_proof([]) do
@@ -155,10 +166,12 @@ defmodule Merkle do
     Bargad.Utils.make_hash(tree, first<>second)
   end
 
+  @spec verify_consistency_proof(Bargad.Types.tree, Bargad.Types.consistency_proof) :: binary
   defp verify_consistency_proof(tree, [head | tail]) do
     Bargad.Utils.make_hash(tree, head <> verify_consistency_proof(tree,tail))
   end
-
+ 
+  @spec verify_consistency_proof(Bargad.Types.tree, Bargad.Types.consistency_proof, binary) :: binary
   def verify_consistency_proof(tree, proof, old_root_hash) do
     hash = verify_consistency_proof(tree, proof)
     if (hash == old_root_hash) do
@@ -197,12 +210,14 @@ defmodule Merkle do
     node
   end
 
+
   def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: _, size: 0, hashFunction: _}, x) do
     node = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, x), [], 1, x)
     Bargad.Utils.set_node(tree, node.hash, node)
     Map.put(tree, :root, node.hash) |> Map.put(:size, 1)
   end
 
+  @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.tree
   def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root,  size: size, hashFunction: _}, x) do
     root = Bargad.Utils.get_node(tree, root)
     l = :math.ceil(:math.log2(root.size))

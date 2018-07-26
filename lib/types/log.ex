@@ -13,7 +13,7 @@ defmodule Bargad.Log do
     end
 
     def consistency_proof(log, m) do
-        Merkle.consistency_Proof(log, m)
+        Merkle.consistency_proof(log, m)
     end
 
     def audit_proof(log, value) do
