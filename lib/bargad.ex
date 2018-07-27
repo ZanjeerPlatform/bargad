@@ -2,17 +2,10 @@ defmodule Bargad do
   @moduledoc """
   Documentation for Bargad.
   """
+  use Application
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Bargad.hello
-      :world
-
-  """
-  def hello do
-    :world
+  def start(_type, _args) do
+    Bargad.Supervisor.start_link
   end
+
 end

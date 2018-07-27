@@ -1,9 +1,5 @@
 defmodule Merkle do
 
-  @type tree :: Bargad.Types.tree
-  @type tree_node :: Bargad.Types.tree_node
-
-
   @spec new(Bargad.Types.tree_type, binary, Bargad.Types.hash_algorithm, Bargad.Types.backend) :: Bargad.Types.tree
   def new(tree_type, tree_name, hash_function, backend) do
     tree = Bargad.Utils.make_tree(tree_type, tree_name, hash_function, backend) |>  backend.init_backend()
