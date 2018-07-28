@@ -14,7 +14,7 @@ defmodule Bargad.Utils do
       treeType: tree_type,
       hashFunction: hash_function,
       root: nil,
-      backend: [{"module", backend}]
+      backend: backend
     )
   end
 
@@ -74,4 +74,10 @@ defmodule Bargad.Utils do
   def get_node(tree, key) do
     decode_node(Storage.get_node(tuple_list_to_map(tree.backend), key))
   end
+
+  def get_backend_module(backend) do
+    backend = Bargad.Utils.tuple_list_to_map(backend)
+    String.to_existing_atom("Elixir." <> backend["module"])
+  end
+
 end

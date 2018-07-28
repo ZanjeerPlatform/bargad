@@ -9,11 +9,13 @@ defmodule ETSBackend do
     end
 
     def get_node(backend, key) do
+       backend = Bargad.Utils.tuple_list_to_map(backend)
        [{_, value}]  = :ets.lookup(String.to_existing_atom(backend["nodes_table"]), key)
        value
     end
 
     def set_node(backend, key, value) do
+        backend = Bargad.Utils.tuple_list_to_map(backend)
         :ets.insert_new(String.to_existing_atom(backend["nodes_table"]), {key, value})
     end
 

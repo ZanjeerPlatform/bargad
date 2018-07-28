@@ -23,6 +23,10 @@ defmodule Bargad.LogClient do
         GenServer.call(Bargad.LogClient, {:build, args})
     end
 
+    def insert(args) do
+        GenServer.call(Bargad.LogClient, {:insert, args})
+    end
+
     def generate_audit_proof(args) do
         GenServer.call(Bargad.LogClient, {:audit_proof, args})
     end

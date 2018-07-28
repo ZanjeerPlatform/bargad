@@ -5,11 +5,13 @@ defmodule Storage do
 
 
     def set_node(backend,key,value) do
-        backend["module"].set_node(backend,key,value)
+        backend_module = Bargad.Utils.get_backend_module(backend)
+        backend_module.set_node(backend,key,value)
     end
 
     def get_node(backend,key) do
-        backend["module"].get_node(backend,key)
+        backend_module = Bargad.Utils.get_backend_module(backend)
+        backend_module.get_node(backend,key)
     end
 
 end

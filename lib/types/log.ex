@@ -1,15 +1,21 @@
 defmodule Bargad.Log do
 
     def new(tree_name, hash_function, backend) do
-        Merkle.new(:LOG, tree_name, hash_function, backend)
+        tree = Merkle.new(:LOG, tree_name, hash_function, backend)
+        Bargad.TreeStorage.save_tree(tree.treeId, Bargad.Utils.encode_tree(tree))
+        tree
     end
 
     def build(tree_name, hash_function, backend, values) do
-        new(tree_name, hash_function, backend) |> Merkle.build(values)
+        tree = new(tree_name, hash_function, backend) |> Merkle.build(values)
+        Bargad.TreeStorage.save_tree(tree.treeId, Bargad.Utils.encode_tree(tree))
+        tree
     end
 
     def insert(log, value) do
-        Merkle.insert(log, value)
+        tree = Merkle.insert(log, value)
+        Bargad.TreeStorage.save_tree(tree.treeId, Bargad.Utils.encode_tree(tree))
+        tree
     end
 
     def consistency_proof(log, m) do
