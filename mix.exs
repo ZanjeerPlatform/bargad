@@ -11,9 +11,56 @@ defmodule Bargad.MixProject do
 
       name: "Bargad",
       source_url: "https://github.com/farazhaider/bargad",
-      docs: [
-        main: "Bargad",
-        extras: ["README.md"]
+      docs: docs()
+    ]
+  end
+
+  def docs do
+    [
+      main: "Bargad",
+      extras: extras(),
+      groups_for_modules: groups_for_modules()
+    ]
+  end
+
+
+  def extras do
+    ["README.md"]
+  end
+
+  def groups_for_modules do
+    [
+      Service: [
+        Bargad
+      ],
+      Modes: [
+        Bargad.Log,
+        Bargad.Map
+      ],
+      Clients: [
+        Bargad.LogClient,
+        Bargad.MapClient
+      ],
+      Backends: [
+        ETSBackend,
+        Storage,
+        Bargad.TreeStorage
+      ],
+      Merkle: [
+        Merkle
+      ],
+      Utils: [
+        Bargad.Utils
+      ],
+      Types: [
+        Bargad.Types
+      ],
+      Protobuf: [
+        Bargad.Trees,
+        Bargad.Nodes
+      ],
+      Supervisor: [
+        Bargad.Supervisor
       ]
     ]
   end
