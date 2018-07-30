@@ -23,7 +23,7 @@ defmodule Bargad.Utils do
   This TreeId is used by `Storage` and `Bargad.TreeStorage` for persisting `t:tree/0` and `t:tree_node/0`
   """
   def generate_tree_id() do
-    1
+    :rand.uniform(100000)
   end
 
   @doc """
@@ -86,7 +86,7 @@ defmodule Bargad.Utils do
   Hashes the binary data supplied based on the hash algorithm `t:hash_algorithm/0` specified in `t:tree`. 
   """
   def make_hash(tree, data) do
-    :crypto.hash(tree.hashFunction, data) |> Base.encode16()
+    :crypto.hash(tree.hashFunction, data) 
   end
 
   @doc false
@@ -151,6 +151,10 @@ defmodule Bargad.Utils do
   def get_backend_module(backend) do
     backend = Bargad.Utils.tuple_list_to_map(backend)
     String.to_existing_atom("Elixir." <> backend["module"])
+  end
+
+  def hsh(data) do
+    :crypto.hash(:sha,data)
   end
 
 end

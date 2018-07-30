@@ -36,6 +36,19 @@ defmodule Merkle do
     node
   end
 
+  @doc false
+  def audit_proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: _, size: 0, hashFunction: _}, leaf_hash) do
+    [:not_found]
+  end
+
+  def audit_proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: 1, hashFunction: _}, leaf_hash) do
+    if leaf_hash == root do
+      [:found, {root, "L"}]
+    else
+      [:not_found]
+    end
+  end
+
   @spec audit_proof(Bargad.Types.tree, binary) :: Bargad.Types.audit_proof
   def audit_proof(tree, leaf_hash) do
 
@@ -56,7 +69,7 @@ defmodule Merkle do
           _ -> right_result
         end
     end
-  end
+  end  
 
   @spec audit_proof(Bargad.Types.tree, Bargad.Types.tree_node, Bargad.Types.tree_node, binary) :: atom
   defp audit_proof(_, _, %Bargad.Nodes.Node{treeId: _, hash: x, children: [], metadata: _, size: _}, leaf_hash) do
