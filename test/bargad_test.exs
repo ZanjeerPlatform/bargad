@@ -234,6 +234,32 @@ defmodule BargadTest do
       end
       
     end
+    
+    test "generate consistency proof for a tree with 8 nodes" do
+      
+      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3", "4", "5", "6", "7", "8"])
+
+      case Bargad.Log.consistency_proof(tree, 3) do
+        [@h1_2, @h3] -> assert true
+        _ -> assert false
+      end
+
+      case Bargad.Log.consistency_proof(tree, 4) do
+        [@h1_2_3_4] -> assert true
+        _ -> assert false
+      end
+
+      case Bargad.Log.consistency_proof(tree, 5) do
+        [@h1_2_3_4, @h5] -> assert true
+        _ -> assert false
+      end
+
+      case Bargad.Log.consistency_proof(tree, 6) do
+        [@h1_2_3_4, @h5_6] -> assert true
+        _ -> assert false
+      end
+      
+    end
 
   end
 
