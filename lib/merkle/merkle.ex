@@ -140,7 +140,7 @@ defmodule Merkle do
 
   @spec consistency_proof(Bargad.Types.tree, pos_integer) :: Bargad.Types.consistency_proof
   def consistency_proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root,  size: _, hashFunction: _}, m) do
-    root = Bargad.Utils.get_node(tree,root)
+    root = Bargad.Utils.get_node(tree, root)
     l = :math.ceil(:math.log2(root.size))
     t = trunc(:math.log2(m))
     consistency_proof(tree, nil, root, {l, t, m, root.size})
@@ -157,12 +157,16 @@ defmodule Merkle do
   defp consistency_proof(tree, sibling, %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [_ , _], metadata: _, size: _}, {l, t, m, _}) when l==t do
     size = trunc(:math.pow(2,l))
     m = m - trunc(:math.pow(2,l))
-    l = :math.ceil(:math.log2(size))
-    t = trunc(:math.log2(m))
-    [ hash | consistency_proof(tree, nil, sibling, {l, t, m, size})]
+    case m do
+      0 -> [hash]
+      _ -> l = :math.ceil(:math.log2(size))
+      t = trunc(:math.log2(m))
+      [ hash | consistency_proof(tree, nil, sibling, {l, t, m, size})]
+    end
+    
   end
 
-  defp consistency_Proof(tree, _, %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left , right], metadata: _, size: _}, {l, t, m, size}) do 
+  defp consistency_proof(tree, _, %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left , right], metadata: _, size: _}, {l, t, m, size}) do 
     left = Bargad.Utils.get_node(tree,left)
     right = Bargad.Utils.get_node(tree,right)
     consistency_proof(tree, right, left, {l-1, t, m, size})
