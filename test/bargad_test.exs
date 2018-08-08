@@ -1,3 +1,17 @@
+# Copyright 2018 Faraz Haider. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 defmodule BargadTest do
   use ExUnit.Case
   doctest Bargad
@@ -259,6 +273,20 @@ defmodule BargadTest do
         _ -> assert false
       end
       
+    end
+
+    test "create a new map, insert key value pairs" do
+      
+      IO.puts Base.encode16(:crypto.hash(:sha256, "cadfsdfsdfsdfsdfsdfsdfsdfsdfsdfdffsdfsdffsfsdft")) |> Integer.parse(16) |> elem(0) |> :math.log2
+      IO.puts Base.encode16(:crypto.hash(:sha256, "dsdsdfsdfsog")) |> Integer.parse(16) |> elem(0) |> :math.log2
+      IO.puts Base.encode16(:crypto.hash(:sha256, "rdfsfsfdsfsdfsfsdat")) |> Integer.parse(16) |> elem(0) |> :math.log2
+      
+      tree = Bargad.Map.new("map", :sha, [{"module", "ETSBackend"}])
+             |> Bargad.Map.set(@h1, :crypto.hash(:sha, "cat"))
+             |> Bargad.Map.set(@h2, :crypto.hash(:sha, "dog"))
+             |> Bargad.Map.set(@h3, :crypto.hash(:sha, "rat"))
+      assert false
+
     end
 
   end

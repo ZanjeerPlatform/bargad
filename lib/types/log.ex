@@ -1,5 +1,27 @@
+# Copyright 2018 Faraz Haider. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 defmodule Bargad.Log do
 
+    @moduledoc """
+    An append-only Log mode, backed by an underlying merkle tree.
+    Once an entry has been accepted by the Log it cannot be changed or removed.
+    In this mode, the Merkle tree is filled up from the left, giving a dense Merkle tree.
+    Log mode has support for  generation and verification of Consistency and Audit Proofs.
+    """
+
+    
     def new(tree_name, hash_function, backend) do
         tree = Merkle.new(:LOG, tree_name, hash_function, backend)
         Bargad.TreeStorage.save_tree(tree.treeId, Bargad.Utils.encode_tree(tree))
@@ -30,7 +52,7 @@ defmodule Bargad.Log do
         Merkle.verify_consistency_proof(log, proof, old_root_hash)
     end
 
-    def verify_audit_proof(log,proof,value) do
+    def verify_audit_proof(log, proof, value) do
         Merkle.verify_audit_proof(log,proof,value)
     end
     

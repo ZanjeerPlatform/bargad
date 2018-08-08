@@ -18,6 +18,7 @@ defmodule Bargad.MixProject do
   def docs do
     [
       main: "Bargad",
+      extra_section: "guides",
       extras: extras(),
       groups_for_modules: groups_for_modules()
     ]
