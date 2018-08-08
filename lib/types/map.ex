@@ -28,4 +28,10 @@ defmodule Bargad.Map do
         SparseMerkle.get_with_inclusion_proof!(map, key)
         ## ADD CACHING to speed up get process
     end
+
+    def verify_inclusion_proof(map, proof, value) do
+        leaf_hash = Bargad.Utils.make_hash(map, value)
+        Merkle.verify_audit_proof(map, proof, leaf_hash)
+    end
+
 end

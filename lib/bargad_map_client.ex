@@ -50,7 +50,12 @@ defmodule Bargad.MapClient do
     def get(args) do
         GenServer.call(Bargad.MapClient, {:get, args})
     end
-  
+
+    def verify_inclusion_proof(args) do
+        GenServer.call(Bargad.MapClient, {:verify_inclusion_proof, args})
+    end
+
+   
     ## Server Callbacks
   
     @doc false
