@@ -1,3 +1,17 @@
+# Copyright 2018 Faraz Haider. All Rights Reserved.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 defmodule Bargad.Utils do
 
   @moduledoc """
@@ -54,7 +68,7 @@ defmodule Bargad.Utils do
   end
 
   @doc """
-  Creates a new leaf node in the tree of type `t:tree_node/0`. 
+  Creates a new node in the tree of type `t:tree_node/0`. 
   """
   
   def make_node(tree, hash, children, size, metadata) do
@@ -81,6 +95,30 @@ defmodule Bargad.Utils do
       left.metadata <> right.metadata
     )
   end
+
+  def make_map_node(tree, left = %Bargad.Nodes.Node{ treeId: _, hash: _, children: _, metadata: _, key: _, size: _}, right) do
+    Bargad.Nodes.Node.new(
+      treeId: tree.treeId,
+      hash: Bargad.Utils.make_hash(tree, left.hash <> right.hash),
+      children: [left.hash, right.hash],
+      size: left.size + right.size,
+      key: max(left.key, right.key)
+    )
+  end
+
+  def make_map_node(tree, key, value) do
+    Bargad.Nodes.Node.new(
+      treeId: tree.treeId,
+      hash: Bargad.Utils.make_hash(tree, value),
+      children: [],
+      size: 1,
+      metadata: value,
+      key: key
+    )
+  end
+
+  
+
 
   @doc """
   Hashes the binary data supplied based on the hash algorithm `t:hash_algorithm/0` specified in `t:tree`. 
@@ -133,7 +171,11 @@ defmodule Bargad.Utils do
   Calls `Storage.set_node/3`.
   """
   def set_node(tree, key, value) do
-    Storage.set_node(tuple_list_to_map(tree.backend), key, encode_node(value))
+    Storage.set_node(tree.backend, key, encode_node(value))
+  end
+
+  def set_replace_node(tree, key, value) do
+    Storage.set_replace_node(tree.backend, key, encode_node(value))
   end
 
   @doc """
@@ -142,7 +184,11 @@ defmodule Bargad.Utils do
   Calls `Storage.get_node/2`.
   """
   def get_node(tree, key) do
-    decode_node(Storage.get_node(tuple_list_to_map(tree.backend), key))
+    decode_node(Storage.get_node(tree.backend, key))
+  end
+
+  def delete_node(tree, key) do
+    Storage.delete_node(tree.backend, key)
   end
 
   @doc """
