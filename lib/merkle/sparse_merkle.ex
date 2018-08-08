@@ -30,7 +30,9 @@ defmodule SparseMerkle do
         if result == 0 do
             -1
         else
-            result |> :math.log2 |> trunc
+            result = result |> :math.log2 |> trunc
+            # after log, diff was always 1 less than the actual
+            result + 1
         end
 
     end
@@ -93,7 +95,7 @@ defmodule SparseMerkle do
                 
             l_dist > r_dist ->
                 # Going towards right child
-                left = insert(tree, right, k, v)
+                right = insert(tree, right, k, v)
                 new_root = Bargad.Utils.make_map_node(tree, left, right)
                 Bargad.Utils.set_node(tree, new_root.hash, new_root)
                 new_root
@@ -184,19 +186,19 @@ defmodule SparseMerkle do
 
     def audit_tree(tree) do
         root = Bargad.Utils.get_node(tree, tree.root)
-        audit_tree(tree, root, [])
+        audit_tree(tree, root, []) |> List.flatten
     end
 
     defp audit_tree(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, acc) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
-        audit_tree(tree, left, ["L" | acc])
-        audit_tree(tree, right, ["R" | acc])
+        [audit_tree(tree, left, ["L" | acc])] ++
+        [audit_tree(tree, right, ["R" | acc])]
     end
 
     defp audit_tree(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, acc) do
-        IO.inspect Enum.reverse([m | acc])
+        [m | acc] |> Enum.reverse |> List.to_tuple
     end
 
 end

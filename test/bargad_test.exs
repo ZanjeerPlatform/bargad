@@ -47,6 +47,30 @@ defmodule BargadTest do
   @h1_2_3_4_5_6 <<120, 40, 116, 43, 60, 185, 158, 17, 16, 40, 129, 254, 96, 65, 17, 8, 129, 40, 199, 196>>
 
   @h1_2_3_4_5_6_7 <<221, 46, 128, 21, 69, 66, 247, 111, 197, 175, 235, 149, 111, 42, 98, 197, 75, 193, 110, 24>>
+
+  @k0 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>
+
+  @k1 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>
+
+  @k2 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2>>
+
+  @k3 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3>>
+
+  @k4 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4>>
+  
+  @k5 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5>>
+  
+  @k6 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6>>
+  
+  @k7 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7>>
+  
+  @k8 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8>>
+
+  @k10 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10>>
+
+  @k63 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63>>
+
+  @k254 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 254>>  
   
   # create a random log with ets 
 
@@ -276,17 +300,14 @@ defmodule BargadTest do
     end
 
     test "create a new map, insert key value pairs" do
-      
-      IO.puts Base.encode16(:crypto.hash(:sha256, "cadfsdfsdfsdfsdfsdfsdfsdfsdfsdfdffsdfsdffsfsdft")) |> Integer.parse(16) |> elem(0) |> :math.log2
-      IO.puts Base.encode16(:crypto.hash(:sha256, "dsdsdfsdfsog")) |> Integer.parse(16) |> elem(0) |> :math.log2
-      IO.puts Base.encode16(:crypto.hash(:sha256, "rdfsfsfdsfsdfsfsdat")) |> Integer.parse(16) |> elem(0) |> :math.log2
-      
-      tree = Bargad.Map.new("map", :sha, [{"module", "ETSBackend"}])
-             |> Bargad.Map.set(@h1, :crypto.hash(:sha, "cat"))
-             |> Bargad.Map.set(@h2, :crypto.hash(:sha, "dog"))
-             |> Bargad.Map.set(@h3, :crypto.hash(:sha, "rat"))
-      assert false
+      map = Bargad.Map.new("map", :sha256, [{"module", "ETSBackend"}])
+             |> Bargad.Map.set(@k1, "1")
+             |> Bargad.Map.set(@k7, "7")
+             |> Bargad.Map.set(@k6, "6")
+             |> Bargad.Map.set(@k2, "2")
 
+      assert SparseMerkle.audit_tree(map) == [{"L", "L", "1"}, {"L", "R", "2"}, {"R", "L", "6"}, {"R", "R", "7"}]
+      
     end
 
   end
