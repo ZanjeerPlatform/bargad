@@ -16,9 +16,6 @@ defmodule SparseMerkle do
 
     use Bitwise
 
-    # metadata field can be used to store the max in a subtree
-
-
     defp distance(x, y) do
         x = x |> Base.encode16 |> Integer.parse(16) |> elem(0)
         y = y |> Base.encode16 |> Integer.parse(16) |> elem(0)
@@ -67,7 +64,7 @@ defmodule SparseMerkle do
                 # as distances are already equal, we find a new parameter
                 # we compare the new key to the keys at this level
                 # if it is smaller than max, then this new leaf will become
-                IO.puts "Putting new leaf in a new level"
+                # make new leaf in a new level"
                 new_leaf = Bargad.Utils.make_map_node(tree, k, v)
                 Bargad.Utils.set_node(tree, new_leaf.hash, new_leaf)
 
@@ -183,6 +180,55 @@ defmodule SparseMerkle do
         end
     end
 
+    def delete!(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k) do
+        root = Bargad.Utils.get_node(tree, root)
+        root = delete(tree, root, k)
+        Map.put(tree, :root, root.hash) |> Map.put(:size, size - 1)
+    end
+    
+    defp delete(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
+        left = Bargad.Utils.get_node(tree, left)
+        right = Bargad.Utils.get_node(tree, right)
+
+        if check_for_leaf(tree, left, right, k) do
+            if left.key == k do
+                right
+            else
+                left
+            end
+        else
+            l_dist = distance(k, left.key)
+            r_dist = distance(k, right.key)
+            cond do
+                l_dist == r_dist ->
+                    raise "key does not exist"
+                l_dist < r_dist ->
+                    # Going towards left child
+                    left = delete(tree, left, k)
+                    new_root = Bargad.Utils.make_map_node(tree, left, right)
+                    Bargad.Utils.set_node(tree, new_root.hash, new_root)
+                    new_root
+                l_dist > r_dist ->
+                    # Going towards right child
+                    right = delete(tree, right, k)
+                    new_root = Bargad.Utils.make_map_node(tree, left, right)
+                    Bargad.Utils.set_node(tree, new_root.hash, new_root)
+                    new_root
+            end
+        end
+    end
+
+    defp delete(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
+        if key == k do
+            IO.puts "found a key here"
+        else
+            raise "key does not exist"
+        end
+    end
+
+    defp check_for_leaf(tree, left, right, k) do
+        (left.size == 1 && left.key == k) || (right.size == 1 && right.key == k)
+    end
 
     def audit_tree(tree) do
         root = Bargad.Utils.get_node(tree, tree.root)

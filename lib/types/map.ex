@@ -34,4 +34,9 @@ defmodule Bargad.Map do
         Merkle.verify_audit_proof(map, proof, leaf_hash)
     end
 
+    def delete(map, key) do
+        SparseMerkle.delete!(map, key)
+    end
+
+
 end

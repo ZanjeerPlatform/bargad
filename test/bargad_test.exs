@@ -267,8 +267,20 @@ defmodule BargadTest do
              |> Bargad.Map.set(@k2, "2")
 
       assert SparseMerkle.audit_tree(map) == [{"L", "L", "1"}, {"L", "R", "2"}, {"R", "L", "6"}, {"R", "R", "7"}]
-
     end
+
+    test "delete values from a map" do
+      map = Bargad.Map.new("map", :sha256, [{"module", "ETSBackend"}])
+             |> Bargad.Map.set(@k1, "1")
+             |> Bargad.Map.set(@k7, "7")
+             |> Bargad.Map.set(@k6, "6")
+             |> Bargad.Map.set(@k2, "2")
+
+      map = Bargad.Map.delete(map, @k2)
+
+      assert SparseMerkle.audit_tree(map) == [{"L", "1"}, {"R", "L", "6"}, {"R", "R", "7"}] 
+    end
+
 
   end
 
