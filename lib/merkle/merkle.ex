@@ -36,68 +36,57 @@ defmodule Merkle do
     node
   end
 
-  @doc false
-  def audit_proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: _, size: 0, hashFunction: _}, leaf_hash) do
-    [:not_found]
-  end
+  use Bitwise
 
-  def audit_proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: 1, hashFunction: _}, leaf_hash) do
-    if leaf_hash == root do
-      [:found, {root, "L"}]
+  def audit_proof(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: 1, hashFunction: _}, m) do
+    root = Bargad.Utils.get_node(tree, root)
+    if m == 1 do
+      %{value: root.metadata, proof: []}
     else
-      [:not_found]
+      raise "value out of range"
     end
   end
 
-  @spec audit_proof(Bargad.Types.tree, binary) :: Bargad.Types.audit_proof
-  def audit_proof(tree, leaf_hash) do
-
-    root =  Bargad.Utils.get_node(tree,tree.root)
-    left =  Bargad.Utils.get_node(tree,List.first(root.children))
-    right = Bargad.Utils.get_node(tree,List.last(root.children))
-
-    left_result = audit_proof(tree, root, left, leaf_hash)
-    right_result = audit_proof(tree, root, right, leaf_hash)
-
-    case Enum.member?(left_result, :found) do
-      true ->
-        left_result ++ [{right.hash, "R"}]
-
-      false ->
-        case Enum.member?(right_result, :found) do
-          true -> right_result ++ [{left.hash, "L"}]
-          _ -> right_result
-        end
-    end
-  end  
-
-  @spec audit_proof(Bargad.Types.tree, Bargad.Types.tree_node, Bargad.Types.tree_node, binary) :: atom
-  defp audit_proof(_, _, %Bargad.Nodes.Node{treeId: _, hash: x, children: [], metadata: _, size: _}, leaf_hash) do
-    if leaf_hash == x do
-      [:found]
+  def audit_proof(tree, m) do
+    #check left and right subtree, go wherever the value is closer
+    if m > tree.size || m <= 0 do
+      raise "value not in range"
     else
-      [:not_found]
+    root = Bargad.Utils.get_node(tree, tree.root)
+    result = audit_proof(tree, nil, nil, root, m) |> Enum.reverse
+    %{value: hd(result), proof: tl(result)}
     end
   end
 
-  defp audit_proof(tree, _, child, leaf_hash) do
+  defp audit_proof(tree, nil, nil, root = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left , right], metadata: _, size: size}, m) do
+    l = :math.ceil(:math.log2(size)) |> trunc
 
-    left = Bargad.Utils.get_node(tree,List.first(child.children))
-    right = Bargad.Utils.get_node(tree,List.last(child.children))
+    left =  Bargad.Utils.get_node(tree,left)
+    right = Bargad.Utils.get_node(tree,right)
 
-    left_result = audit_proof(tree, child, left, leaf_hash)
-    right_result = audit_proof(tree, child, right, leaf_hash)
-
-    case Enum.member?(left_result, :found) do
-      true ->
-        left_result ++ [{right.hash, "R"}]
-
-      false ->
-        case Enum.member?(right_result, :found) do
-          true -> right_result ++ [{left.hash, "L"}]
-          _ -> right_result
-        end
+    if m <= (1 <<< (l-1)) do
+      audit_proof(tree, right, "R", left, m)
+    else
+      audit_proof(tree, left, "L", right, m - (1 <<< (l-1)))
     end
+  end
+
+  defp audit_proof(tree, sibling, direction, root = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left , right], metadata: _, size: size}, m) do
+    l = :math.ceil(:math.log2(size)) |> trunc
+
+    left =  Bargad.Utils.get_node(tree,left)
+    right = Bargad.Utils.get_node(tree,right)
+
+    if m <= (1 <<< (l-1)) do
+      [{sibling.hash, direction} | audit_proof(tree, right, "R", left, m)]
+    else
+      [{sibling.hash, direction} | audit_proof(tree, left, "L", right, m - (1 <<< (l-1)))]
+    end
+
+  end
+
+  defp audit_proof(tree, sibling, direction, leaf = %Bargad.Nodes.Node{treeId: _, hash: x, children: [], metadata: value, size: _}, m) do
+    [{sibling.hash, direction}, value ]
   end
 
   defp verify_audit_proof(leaf_hash, [], _, _) do
@@ -119,23 +108,6 @@ defmodule Merkle do
     else 
       false
     end
-  end
-
-  defp audit_tree(_, %Bargad.Nodes.Node{treeId: _, hash: x, children: [], metadata: y, size: _}, _) do
-    IO.puts x <> " || " <> y
-  end
-
-  defp audit_tree(tree, %Bargad.Nodes.Node{treeId: _, hash: x, children: [left,right], metadata: y, size: _}, _) do
-      IO.puts x <> " || " <> y
-      left = Bargad.Utils.get_node(tree,left)
-      right = Bargad.Utils.get_node(tree,right)
-      audit_tree(tree,left,0)
-      audit_tree(tree,right,0)
-  end
-
-  def audit_tree(tree) do
-    root = Bargad.Utils.get_node(tree,tree.root)
-    audit_tree(tree,root,0)
   end
 
   @spec consistency_proof(Bargad.Types.tree, pos_integer) :: Bargad.Types.consistency_proof

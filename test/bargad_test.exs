@@ -193,30 +193,11 @@ defmodule BargadTest do
 
   describe "tree get operations" do
     
-    test "generate audit proof for an empty tree" do
-
-      tree = Bargad.Log.new("FRZ", :sha, [{"module", "ETSBackend"}])
-
-      case Bargad.Log.audit_proof(tree, @h1) do
-        [:not_found] -> assert true
-        _ -> assert false
-      end
-      
-    end
-
     test "generate audit proof for a tree with 1 node" do
 
       tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1"])
 
-      case Bargad.Log.audit_proof(tree, @empty) do
-        [:not_found] -> assert true
-        _ -> assert false
-      end
-
-      case Bargad.Log.audit_proof(tree, @h1) do
-        [:found, {@h1, "L"}] -> assert true
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [], value: "1"}
 
     end
 
@@ -224,15 +205,9 @@ defmodule BargadTest do
 
       tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2"])
 
-      case Bargad.Log.audit_proof(tree, @h1) do
-        [:found, {@h2, "R"}] -> assert true
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}], value: "1"}
 
-      case Bargad.Log.audit_proof(tree, @h2) do
-        [:found, {@h1, "L"}] -> assert true
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 2) == %{proof: [{@h1, "L"}], value: "2"}
       
     end
 
@@ -240,20 +215,11 @@ defmodule BargadTest do
 
       tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3"])
 
-      case Bargad.Log.audit_proof(tree, @h1) do
-        [:found, {@h2, "R"}, {@h3, "R"}] -> assert true
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3, "R"}], value: "1"}
 
-      case Bargad.Log.audit_proof(tree, @h2) do
-        [:found, {@h1, "L"}, {@h3, "R"}] -> assert true
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 2) == %{proof: [{@h1, "L"}, {@h3, "R"}], value: "2"}
 
-      case Bargad.Log.audit_proof(tree, @h3) do
-        [:found, {@h1_2, "L"}] -> assert true
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 3) == %{proof: [{@h1_2, "L"}], value: "3"}
       
     end
 
@@ -261,15 +227,9 @@ defmodule BargadTest do
       
       tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3", "4", "5", "6"])
 
-      case Bargad.Log.audit_proof(tree, @h1) do
-        [:found, {@h2, "R"}, {@h3_4, "R"}, {@h5_6, "R"}] -> assert true  
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3_4, "R"}, {@h5_6, "R"}], value: "1"}
 
-      case Bargad.Log.audit_proof(tree, @h5) do
-        [:found, {@h6, "R"},{@h1_2_3_4, "L"}] -> assert true
-        _ -> assert false
-      end
+      assert Bargad.Log.audit_proof(tree, 5) == %{proof: [{@h6, "R"},{@h1_2_3_4, "L"}], value: "5"}
       
     end
     
@@ -307,7 +267,7 @@ defmodule BargadTest do
              |> Bargad.Map.set(@k2, "2")
 
       assert SparseMerkle.audit_tree(map) == [{"L", "L", "1"}, {"L", "R", "2"}, {"R", "L", "6"}, {"R", "R", "7"}]
-      
+
     end
 
   end
