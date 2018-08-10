@@ -107,9 +107,13 @@ defmodule Bargad.Utils do
   end
 
   def make_map_node(tree, key, value) do
+    # salt the node with the key to prevent storage collisions
+    # eg. if two keys have the same values, their hashes would be the same and as the nodes are being
+    # indexed by their keys, storage would collide. 
+    # This scheme would prevent against preimage attacks as well
     Bargad.Nodes.Node.new(
       treeId: tree.treeId,
-      hash: Bargad.Utils.make_hash(tree, value),
+      hash: Bargad.Utils.make_hash(tree, Bargad.Utils.salt_node(key, value)),
       children: [],
       size: 1,
       metadata: value,
@@ -117,8 +121,9 @@ defmodule Bargad.Utils do
     )
   end
 
-  
-
+  def salt_node(k, v) do
+    k <> v
+  end
 
   @doc """
   Hashes the binary data supplied based on the hash algorithm `t:hash_algorithm/0` specified in `t:tree`. 
@@ -197,10 +202,6 @@ defmodule Bargad.Utils do
   def get_backend_module(backend) do
     backend = Bargad.Utils.tuple_list_to_map(backend)
     String.to_existing_atom("Elixir." <> backend["module"])
-  end
-
-  def hsh(data) do
-    :crypto.hash(:sha,data)
   end
 
 end

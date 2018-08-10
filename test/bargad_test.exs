@@ -269,6 +269,18 @@ defmodule BargadTest do
       assert SparseMerkle.audit_tree(map) == [{"L", "L", "1"}, {"L", "R", "2"}, {"R", "L", "6"}, {"R", "R", "7"}]
     end
 
+    test "get with inclusion proof for a map" do
+
+      map = Bargad.Map.new("map", :sha256, [{"module", "ETSBackend"}])
+             |> Bargad.Map.set(@k1, "1")
+             |> Bargad.Map.set(@k7, "7")
+             |> Bargad.Map.set(@k6, "6")
+             |> Bargad.Map.set(@k2, "2")
+
+      Bargad.Map.get(map, @k2) == %{proof: [{Bargad.Utils.make_hash(map, "1"), "L"}, { Bargad.Utils.make_hash(map, Bargad.Utils.make_hash(map, "6") <> Bargad.Utils.make_hash(map, "6")) , "R"}], value: "2"} 
+    end
+
+
     test "delete values from a map" do
       map = Bargad.Map.new("map", :sha256, [{"module", "ETSBackend"}])
              |> Bargad.Map.set(@k1, "1")
