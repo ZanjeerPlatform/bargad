@@ -4,16 +4,20 @@ defmodule Merkle do
   def new(tree_type, tree_name, hash_function, backend) do
     tree = Bargad.Utils.make_tree(tree_type, tree_name, hash_function, backend)
     tree = Bargad.Utils.get_backend_module(backend).init_backend(tree)
+    # put an empty leaf to make hash not nil (proto def says it's required), make the size zero
     Map.put(tree, :root, Bargad.Utils.make_hash(tree,<<>>)) |> Map.put(:size, 0)
   end
 
   @spec build(Bargad.Types.tree, Bargad.Types.values) :: Bargad.Types.tree
   def build(tree, data) do
+    # See this https://elixirforum.com/t/transform-a-list-into-an-map-with-indexes-using-enum-module/1523
+    # Doing this to associate each value with it's M
+    data = 1..length(data) |> Enum.zip(data) |> Enum.into([])
     Map.put(tree, :root, build(tree, data, 0).hash) |> Map.put(:size, length(data))
   end
 
-  defp build(tree, [ value | []], _) do
-    node = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, value), [], 1, value)
+  defp build(tree, [ {index, value} | []], _) do
+    node = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, index |> Integer.to_string |> Bargad.Utils.salt_node(value)), [], 1, value)
     Bargad.Utils.set_node(tree,node.hash,node)
     node
   end
@@ -174,7 +178,7 @@ defmodule Merkle do
   end
 
   defp insert(tree, _, left = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [], metadata: _, size: _}, x, _, "R")  do
-    right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, x), [], 1, x)
+    right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
     Bargad.Utils.set_node(tree,right.hash,right)
     node = Bargad.Utils.make_node(tree, left, right)
     Bargad.Utils.set_node(tree,node.hash,node)
@@ -186,7 +190,7 @@ defmodule Merkle do
     right = Bargad.Utils.get_node(tree, right)
     if left.size < :math.pow(2,l-1) do
       left = insert(tree, root, left, x, l-1,"L")
-      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, x), [], 1, x)
+      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
       Bargad.Utils.set_node(tree,right.hash,right)
     else
       right = insert(tree, root, right, x, l-1,"R")
@@ -198,7 +202,7 @@ defmodule Merkle do
 
 
   def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: _, size: 0, hashFunction: _}, x) do
-    node = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, x), [], 1, x)
+    node = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
     Bargad.Utils.set_node(tree, node.hash, node)
     Map.put(tree, :root, node.hash) |> Map.put(:size, 1)
   end
@@ -209,7 +213,7 @@ defmodule Merkle do
     l = :math.ceil(:math.log2(root.size))
     
     if root.size == :math.pow(2,l) do
-      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree,x), [], 1, x)
+      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
       Bargad.Utils.set_node(tree, right.hash, right)
       root = Bargad.Utils.make_node(tree, root, right)
       Bargad.Utils.set_node(tree,root.hash,root)

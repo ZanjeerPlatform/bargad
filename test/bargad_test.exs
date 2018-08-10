@@ -14,39 +14,62 @@
 
 defmodule BargadTest do
   use ExUnit.Case
+
   doctest Bargad
 
-  @empty <<218, 57, 163, 238, 94, 107, 75, 13, 50, 85, 191, 239, 149, 96, 24, 144, 175, 216, 7, 9>>
 
-  @h1 <<53, 106, 25, 43, 121, 19, 176, 76, 84, 87, 77, 24, 194, 141, 70, 230, 57, 84, 40, 171>>
+  
+  @empty <<227, 176, 196, 66, 152, 252, 28, 20, 154, 251, 244, 200, 153, 111, 185, 36,
+  39, 174, 65, 228, 100, 155, 147, 76, 164, 149, 153, 27, 120, 82, 184, 85>>
 
-  @h2 <<218, 75, 146, 55, 186, 204, 205, 241, 156, 7, 96, 202, 183, 174, 196, 168, 53, 144, 16, 176>>
+  ## Hashes h1 to h7 i.e leaf node hashes are salted by their insertion point, 
+  ## here it is assumed that 1 was inserted first, 2 was second etc.
+  ## So h1 contains that hash for "1" <> "1" and so on.
+
+  @h1 <<79, 200, 43, 38, 174, 203, 71, 210, 134, 140, 78, 251, 227, 88, 23, 50, 163, 231, 203, 204, 
+  108, 46, 251, 50, 6, 44, 8, 23, 10, 5, 238, 184>>
+
+  @h2 <<120, 95, 62, 199, 235, 50, 243, 11, 144, 205, 15, 207, 54, 87, 211, 136, 181, 255, 66, 151,
+  242, 249, 113, 111, 246, 110, 155, 105, 192, 93, 221, 9>>
  
-  @h3 <<119, 222, 104, 218, 236, 216, 35, 186, 187, 181, 142, 219, 28, 142, 20, 215, 16, 110, 131, 187>>
+  @h3 <<198, 243, 172, 87, 148, 74, 83, 20, 144, 205, 57, 144, 45, 15, 119, 119, 21, 253, 0, 94, 250, 
+  201, 163, 6, 34, 213, 245, 32, 94, 127, 104, 148>>
 
-  @h4 <<27, 100, 83, 137, 36, 115, 164, 103, 208, 115, 114, 212, 94, 176, 90, 188, 32, 49, 100, 122>>
+  @h4 <<113, 238, 69, 163, 192, 219, 154, 152, 101, 247, 49, 61, 211, 55, 44, 246, 13, 202, 100, 121, 
+  212, 98, 97, 243, 84, 46, 185, 52, 110, 74, 4, 214>>
 
-  @h5 <<172, 52, 120, 214, 154, 60, 129, 250, 98, 230, 15, 92, 54, 150, 22, 90, 78, 94, 106, 196>>
+  @h5 <<2, 210, 11, 189, 126, 57, 74, 213, 153, 154, 76, 235, 171, 172, 150, 25, 115, 44, 52, 58, 76, 
+  172, 153, 71, 12, 3, 226, 59, 162, 189, 194, 188>>
 
-  @h6 <<193, 223, 217, 110, 234, 140, 194, 182, 39, 133, 39, 91, 202, 56, 172, 38, 18, 86, 226, 120>>
+  @h6 <<58, 218, 146, 242, 139, 76, 237, 163, 133, 98, 235, 240, 71, 198, 255, 5, 64, 13, 76, 87, 35, 
+  82, 161, 20, 46, 237, 254, 246, 125, 33, 230, 98>>
 
-  @h7 <<172, 52, 120, 214, 154, 60, 129, 250, 98, 230, 15, 92, 54, 150, 22, 90, 78, 94, 106, 196>>
+  @h7 <<168, 138, 121, 2, 203, 78, 246, 151, 186, 11, 103, 89, 197, 14, 140, 16, 41, 127, 245, 143, 148, 
+  34, 67, 222, 25, 185, 132, 132, 27, 254, 31, 115>>
 
-  @h1_2 <<88, 198, 145, 40, 49, 223, 67, 26, 82, 175, 60, 216, 24, 202, 163, 82, 246, 13, 141, 176>>
+  @h1_2 <<174, 86, 139, 96, 80, 100, 130, 199, 152, 102, 211, 202, 127, 141, 229, 228,
+  191, 185, 30, 105, 131, 222, 113, 100, 114, 4, 121, 158, 229, 142, 185, 72>>
 
-  @h1_2_3 <<197, 111, 91, 7, 167, 28, 233, 238, 122, 156, 145, 160, 50, 205, 78, 212, 3, 178, 2, 96>>
+  @h1_2_3 <<125, 209, 10, 138, 85, 10, 170, 3, 224, 79, 22, 19, 250, 235, 85, 39, 217,
+  224, 186, 33, 217, 197, 209, 167, 75, 48, 141, 226, 118, 150, 18, 62>>
 
-  @h3_4 <<143, 58, 105, 241, 14, 191, 252, 38, 83, 232, 97, 34, 47, 22, 177, 120, 245, 131, 0, 95>>
+  @h3_4 <<120, 213, 172, 148, 218, 5, 101, 242, 224, 78, 182, 5, 161, 152, 97, 82, 199,
+  15, 60, 164, 19, 229, 105, 233, 212, 162, 44, 200, 239, 12, 206, 225>>
 
-  @h5_6 <<210, 133, 109, 55, 194, 244, 115, 80, 41, 24, 63, 141, 231, 115, 160, 250, 233, 79, 160, 3>>
+  @h5_6 <<247, 225, 45, 249, 249, 223, 203, 198, 148, 111, 111, 250, 249, 184, 229, 213,
+  5, 20, 116, 162, 22, 151, 66, 105, 210, 15, 237, 79, 115, 55, 33, 176>>
 
-  @h5_6_7 <<143, 182, 119, 179, 164, 93, 79, 79, 188, 43, 205, 155, 198, 177, 123, 125, 27, 138, 240, 28>>
+  @h5_6_7 <<40, 183, 127, 132, 211, 107, 207, 84, 141, 186, 156, 142, 224, 165, 1, 224,
+  179, 133, 156, 122, 251, 43, 135, 16, 5, 119, 233, 246, 172, 118, 195, 182>>
 
-  @h1_2_3_4 <<6, 226, 180, 166, 142, 39, 184, 102, 21, 21, 232, 8, 86, 246, 70, 130, 43, 72, 64, 49>>
+  @h1_2_3_4 <<85, 25, 163, 48, 38, 226, 23, 127, 100, 13, 250, 134, 253, 214, 216, 120, 224,
+  106, 110, 97, 47, 60, 126, 232, 189, 221, 232, 181, 110, 17, 220, 213>>
 
-  @h1_2_3_4_5_6 <<120, 40, 116, 43, 60, 185, 158, 17, 16, 40, 129, 254, 96, 65, 17, 8, 129, 40, 199, 196>>
+  @h1_2_3_4_5_6 <<30, 217, 107, 107, 135, 64, 147, 94, 26, 33, 112, 206, 151, 172, 209, 217,
+  158, 191, 32, 235, 75, 76, 158, 194, 212, 155, 187, 170, 66, 175, 231, 6>>
 
-  @h1_2_3_4_5_6_7 <<221, 46, 128, 21, 69, 66, 247, 111, 197, 175, 235, 149, 111, 42, 98, 197, 75, 193, 110, 24>>
+  @h1_2_3_4_5_6_7 <<242, 197, 53, 19, 5, 23, 59, 126, 216, 253, 60, 14, 220, 187, 235, 206, 193,
+  104, 171, 235, 234, 162, 59, 47, 40, 81, 108, 128, 53, 229, 27, 132>>
 
   @k0 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>
 
@@ -78,7 +101,7 @@ defmodule BargadTest do
 
     test "create a new empty tree" do
 
-      tree = Bargad.Log.new("FRZ", :sha, [{"module", "ETSBackend"}])
+      tree = Bargad.Log.new("FRZ", :sha256, [{"module", "ETSBackend"}])
       
       assert tree.root == @empty
       assert tree.size == 0
@@ -87,7 +110,7 @@ defmodule BargadTest do
 
     test "build a new tree with 1 node" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1"])
 
       assert tree.root == @h1
       assert tree.size == 1
@@ -96,7 +119,7 @@ defmodule BargadTest do
 
     test "build a new tree with 2 nodes" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2"])
 
       assert tree.root == @h1_2
       assert tree.size == 2
@@ -108,7 +131,7 @@ defmodule BargadTest do
 
     test "build a new tree with 3 nodes" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2", "3"])
 
       assert tree.root == @h1_2_3
       assert tree.size == 3
@@ -123,7 +146,7 @@ defmodule BargadTest do
 
     test "build a new tree with 6 nodes" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3","4","5","6"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2", "3","4","5","6"])
 
       assert tree.root == @h1_2_3_4_5_6
       assert tree.size == 6
@@ -147,7 +170,7 @@ defmodule BargadTest do
 
     test "insert a new node in an empty tree" do
 
-      tree = Bargad.Log.new("FRZ", :sha, [{"module", "ETSBackend"}])
+      tree = Bargad.Log.new("FRZ", :sha256, [{"module", "ETSBackend"}])
 
       tree = Bargad.Log.insert(tree, "1")
 
@@ -158,7 +181,7 @@ defmodule BargadTest do
 
     test "insert a node in a tree with 1 node" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1"])
 
       tree = Bargad.Log.insert(tree, "2")
 
@@ -169,7 +192,7 @@ defmodule BargadTest do
 
     test "insert a node in a tree with 3 nodes" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1","2","3"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1","2","3"])
 
       tree = Bargad.Log.insert(tree, "4")
 
@@ -180,7 +203,7 @@ defmodule BargadTest do
 
     test "insert a node in a tree with 6 nodes" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1","2","3","4","5","6"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1","2","3","4","5","6"])
 
       tree = Bargad.Log.insert(tree, "7")
 
@@ -195,7 +218,7 @@ defmodule BargadTest do
     
     test "generate audit proof for a tree with 1 node" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1"])
 
       assert Bargad.Log.audit_proof(tree, 1) == %{proof: [], value: "1"}
 
@@ -203,7 +226,7 @@ defmodule BargadTest do
 
     test "generate audit proof for a tree with 2 nodes" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2"])
 
       assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}], value: "1"}
 
@@ -213,7 +236,7 @@ defmodule BargadTest do
 
     test "generate audit proof for a tree with 3 nodes" do
 
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2", "3"])
 
       assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3, "R"}], value: "1"}
 
@@ -225,7 +248,7 @@ defmodule BargadTest do
 
     test "generate audit proof for a tree with 6 nodes" do
       
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3", "4", "5", "6"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2", "3", "4", "5", "6"])
 
       assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3_4, "R"}, {@h5_6, "R"}], value: "1"}
 
@@ -235,7 +258,7 @@ defmodule BargadTest do
     
     test "generate consistency proof for a tree with 8 nodes" do
       
-      tree = Bargad.Log.build("FRZ", :sha, [{"module", "ETSBackend"}], ["1", "2", "3", "4", "5", "6", "7", "8"])
+      tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2", "3", "4", "5", "6", "7", "8"])
 
       case Bargad.Log.consistency_proof(tree, 3) do
         [@h1_2, @h3] -> assert true
