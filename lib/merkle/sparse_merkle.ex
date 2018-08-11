@@ -45,8 +45,13 @@ defmodule SparseMerkle do
     # insertion in non empty tree
     def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k, v) do
         root = Bargad.Utils.get_node(tree, root)
-        root = insert(tree, root, k, v)
-        Map.put(tree, :root, root.hash) |> Map.put(:size, size + 1)
+        new_root = insert(tree, root, k, v)
+        # basically don't delete the root if the tree contains only one node, and that would be a leaf node
+        if tree.size > 1 do
+        # deletes the existing root from the storage as there would be a new root
+        Bargad.Utils.delete_node(tree, root.hash)
+        end
+        Map.put(tree, :root, new_root.hash) |> Map.put(:size, size + 1)
     end
 
 
@@ -72,11 +77,15 @@ defmodule SparseMerkle do
                 max_key = max(left.key, right.key)
 
                 if k < min_key do
+                    # deletes the existing root from the storage as there would be a new root
+                    Bargad.Utils.delete_node(tree, root.hash)
                     # make new leaf as left child at the new level
                     new_root = Bargad.Utils.make_map_node(tree, new_leaf, root)
                     Bargad.Utils.set_node(tree, new_root.hash, new_root)
                     new_root
                 else
+                    # deletes the existing root from the storage as there would be a new root
+                    Bargad.Utils.delete_node(tree, root.hash)
                     # make new leaf as right child at the new level
                     new_root = Bargad.Utils.make_map_node(tree, root, new_leaf)
                     Bargad.Utils.set_node(tree, new_root.hash, new_root)
@@ -86,6 +95,8 @@ defmodule SparseMerkle do
             l_dist < r_dist ->
                 # Going towards left child
                 left = insert(tree, left, k, v)
+                # deletes the existing root from the storage as there would be a new root
+                Bargad.Utils.delete_node(tree, root.hash)
                 new_root = Bargad.Utils.make_map_node(tree, left, right)
                 Bargad.Utils.set_node(tree, new_root.hash, new_root)
                 new_root
@@ -93,6 +104,8 @@ defmodule SparseMerkle do
             l_dist > r_dist ->
                 # Going towards right child
                 right = insert(tree, right, k, v)
+                # deletes the existing root from the storage as there would be a new root
+                Bargad.Utils.delete_node(tree, root.hash)
                 new_root = Bargad.Utils.make_map_node(tree, left, right)
                 Bargad.Utils.set_node(tree, new_root.hash, new_root)
                 new_root
@@ -182,8 +195,10 @@ defmodule SparseMerkle do
 
     def delete!(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k) do
         root = Bargad.Utils.get_node(tree, root)
-        root = delete(tree, root, k)
-        Map.put(tree, :root, root.hash) |> Map.put(:size, size - 1)
+        new_root = delete(tree, root, k)
+        # deletes the existing root from the storage as there would be a new root
+        Bargad.Utils.delete_node(tree, root.hash)
+        Map.put(tree, :root, new_root.hash) |> Map.put(:size, size - 1)
     end
     
     defp delete(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
@@ -192,8 +207,12 @@ defmodule SparseMerkle do
 
         if check_for_leaf(tree, left, right, k) do
             if left.key == k do
+                # deletes the target key
+                Bargad.Utils.delete_node(tree, left.hash)
                 right
             else
+                # deletes the target key
+                Bargad.Utils.delete_node(tree, right.hash)
                 left
             end
         else
@@ -205,12 +224,16 @@ defmodule SparseMerkle do
                 l_dist < r_dist ->
                     # Going towards left child
                     left = delete(tree, left, k)
+                    # deletes the existing root from the storage as there would be a new root
+                    Bargad.Utils.delete_node(tree, root.hash)
                     new_root = Bargad.Utils.make_map_node(tree, left, right)
                     Bargad.Utils.set_node(tree, new_root.hash, new_root)
                     new_root
                 l_dist > r_dist ->
                     # Going towards right child
                     right = delete(tree, right, k)
+                    # deletes the existing root from the storage as there would be a new root
+                    Bargad.Utils.delete_node(tree, root.hash)
                     new_root = Bargad.Utils.make_map_node(tree, left, right)
                     Bargad.Utils.set_node(tree, new_root.hash, new_root)
                     new_root
@@ -218,6 +241,7 @@ defmodule SparseMerkle do
         end
     end
 
+    ## Check if this would ever be called, if not then remove it.
     defp delete(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
         if key == k do
             IO.puts "found a key here"

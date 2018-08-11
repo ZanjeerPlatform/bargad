@@ -87,12 +87,13 @@ defmodule Bargad.Utils do
   Creates a new node with its children as `left` and `right`.
   """
   def make_node(tree, left, right) do
+    # Salting of non leaf nodes is not required
     Bargad.Utils.make_node(
       tree,
       Bargad.Utils.make_hash(tree, left.hash <> right.hash),
       [left.hash, right.hash],
       left.size + right.size,
-      left.metadata <> right.metadata
+      nil
     )
   end
 

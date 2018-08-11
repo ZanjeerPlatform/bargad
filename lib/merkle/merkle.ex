@@ -11,7 +11,7 @@ defmodule Merkle do
   @spec build(Bargad.Types.tree, Bargad.Types.values) :: Bargad.Types.tree
   def build(tree, data) do
     # See this https://elixirforum.com/t/transform-a-list-into-an-map-with-indexes-using-enum-module/1523
-    # Doing this to associate each value with it's M
+    # Doing this to associate each value with it's insertion point.
     data = 1..length(data) |> Enum.zip(data) |> Enum.into([])
     Map.put(tree, :root, build(tree, data, 0).hash) |> Map.put(:size, length(data))
   end
@@ -195,6 +195,10 @@ defmodule Merkle do
     else
       right = insert(tree, root, right, x, l-1,"R")
     end
+
+    # deletes the existing root from the storage as there would be a new root
+    Bargad.Utils.delete_node(tree, root.hash)
+
     node = Bargad.Utils.make_node(tree, left, right)
     Bargad.Utils.set_node(tree,node.hash,node)
     node
@@ -215,6 +219,11 @@ defmodule Merkle do
     if root.size == :math.pow(2,l) do
       right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
       Bargad.Utils.set_node(tree, right.hash, right)
+      # basically don't delete the root if the tree contains only one node, and that would be a leaf node
+      if tree.size > 1 do
+        # deletes the existing root from the storage as there would be a new root
+        Bargad.Utils.delete_node(tree, root.hash)
+      end
       root = Bargad.Utils.make_node(tree, root, right)
       Bargad.Utils.set_node(tree,root.hash,root)
       Map.put(tree, :root, root.hash) |> Map.put(:size, size + 1)
@@ -227,6 +236,8 @@ defmodule Merkle do
       else
         right = insert(tree, root, right, x, l-1,"R" )
       end
+      # deletes the existing root from the storage as there would be a new root
+      Bargad.Utils.delete_node(tree, root.hash)
       root = Bargad.Utils.make_node(tree, left, right)
       Bargad.Utils.set_node(tree,root.hash,root)
       Map.put(tree, :root, root.hash) |> Map.put(:size, size + 1)
