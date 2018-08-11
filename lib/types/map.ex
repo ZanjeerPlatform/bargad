@@ -15,11 +15,15 @@
 defmodule Bargad.Map do
 
     def new(tree_name, hash_function, backend) do
-        Merkle.new(:MAP, tree_name, hash_function, backend)
+        tree = Merkle.new(:MAP, tree_name, hash_function, backend)
+        Bargad.TreeStorage.save_tree(tree.treeId, Bargad.Utils.encode_tree(tree))
+        tree
     end
 
     def set(map, key, value) do
-        SparseMerkle.insert(map, key, value)
+        map = SparseMerkle.insert(map, key, value)
+        Bargad.TreeStorage.save_tree(map.treeId, Bargad.Utils.encode_tree(map))
+        map
         # node will store the key hash, the value of the that key will go in metdata for now
         # the map would store the the tree root, total levels, size, each node would store the leaves below it
     end
@@ -35,7 +39,9 @@ defmodule Bargad.Map do
     end
 
     def delete(map, key) do
-        SparseMerkle.delete!(map, key)
+        map = SparseMerkle.delete!(map, key)
+        Bargad.TreeStorage.save_tree(map.treeId, Bargad.Utils.encode_tree(map))
+        map
     end
 
 

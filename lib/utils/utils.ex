@@ -180,10 +180,6 @@ defmodule Bargad.Utils do
     Storage.set_node(tree.backend, key, encode_node(value))
   end
 
-  def set_replace_node(tree, key, value) do
-    Storage.set_replace_node(tree.backend, key, encode_node(value))
-  end
-
   @doc """
   Utility function for retrieving a tree node.
 

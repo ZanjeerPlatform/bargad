@@ -52,10 +52,4 @@ defmodule ETSBackend do
         :ets.insert_new(String.to_existing_atom(backend["nodes_table"]), {key, value})
     end
 
-    # car crash
-    def set_replace_node(backend, key, value) do
-        backend = Bargad.Utils.tuple_list_to_map(backend)
-        :ets.insert(String.to_existing_atom(backend["nodes_table"]), {key, value})
-    end
-
 end
