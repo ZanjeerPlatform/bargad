@@ -300,7 +300,7 @@ defmodule BargadTest do
              |> Bargad.Map.set(@k6, "6")
              |> Bargad.Map.set(@k2, "2")
 
-      Bargad.Map.get(map, @k2) == %{proof: [{Bargad.Utils.make_hash(map, "1"), "L"}, { Bargad.Utils.make_hash(map, Bargad.Utils.make_hash(map, "6") <> Bargad.Utils.make_hash(map, "6")) , "R"}], value: "2"} 
+      assert Bargad.Map.get(map, @k2) == %{proof: [{Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k1, "1")), "L"}, { Bargad.Utils.make_hash(map, Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k6, "6")) <> Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k7, "7"))) , "R"}], value: "2"} 
     end
 
 
