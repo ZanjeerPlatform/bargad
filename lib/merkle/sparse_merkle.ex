@@ -15,25 +15,6 @@
 defmodule SparseMerkle do
 
     use Bitwise
-
-    defp distance(x, y) do
-        x = x |> Base.encode16 |> Integer.parse(16) |> elem(0)
-        y = y |> Base.encode16 |> Integer.parse(16) |> elem(0)
-
-        result = bxor(x, y) 
-
-        # xor with the same results in a zero, this check is done for when a person tries to insert an existing key
-        # xor becomes 0, for which log is undefined so we return a negative value to indicated that it is the minimum distance
-        if result == 0 do
-            -1
-        else
-            result = result |> :math.log2 |> trunc
-            # after log, diff was always 1 less than the actual
-            result + 1
-        end
-
-    end
-
     
     # insertion in empty tree
     def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: _, size: 0, hashFunction: _}, k, v) do
@@ -45,7 +26,7 @@ defmodule SparseMerkle do
     # insertion in non empty tree
     def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k, v) do
         root = Bargad.Utils.get_node(tree, root)
-        new_root = insert(tree, root, k, v)
+        new_root = do_insert(tree, root, k, v)
         # basically don't delete the root if the tree contains only one node, and that would be a leaf node
         if tree.size > 1 do
         # deletes the existing root from the storage as there would be a new root
@@ -55,7 +36,7 @@ defmodule SparseMerkle do
     end
 
 
-    defp insert(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left, right], metadata: _, key: _, size: _}, k, v) do
+    defp do_insert(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left, right], metadata: _, key: _, size: _}, k, v) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -94,7 +75,7 @@ defmodule SparseMerkle do
 
             l_dist < r_dist ->
                 # Going towards left child
-                left = insert(tree, left, k, v)
+                left = do_insert(tree, left, k, v)
                 # deletes the existing root from the storage as there would be a new root
                 Bargad.Utils.delete_node(tree, root.hash)
                 new_root = Bargad.Utils.make_map_node(tree, left, right)
@@ -103,7 +84,7 @@ defmodule SparseMerkle do
                 
             l_dist > r_dist ->
                 # Going towards right child
-                right = insert(tree, right, k, v)
+                right = do_insert(tree, right, k, v)
                 # deletes the existing root from the storage as there would be a new root
                 Bargad.Utils.delete_node(tree, root.hash)
                 new_root = Bargad.Utils.make_map_node(tree, left, right)
@@ -113,7 +94,7 @@ defmodule SparseMerkle do
     end
 
 
-    defp insert(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [], metadata: _, key: key, size: _}, k, v) do
+    defp do_insert(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [], metadata: _, key: key, size: _}, k, v) do
         new_leaf = Bargad.Utils.make_map_node(tree, k, v)
         Bargad.Utils.set_node(tree, new_leaf.hash, new_leaf)
 
@@ -137,17 +118,16 @@ defmodule SparseMerkle do
                 Bargad.Utils.set_node(tree, new_root.hash, new_root)
                 new_root
         end
-
-
     end
 
     def get_with_inclusion_proof!(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k) do
         root = Bargad.Utils.get_node(tree, root)
-        result = get_with_inclusion_proof(tree, nil, nil, root, k) |> Enum.reverse
+        result = do_get_with_inclusion_proof(tree, nil, nil, root, k) |> Enum.reverse
         %{value: hd(result), proof: tl(result)}
     end
 
-    defp get_with_inclusion_proof(tree, nil, nil, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
+    # this is called only once, when starting
+    defp do_get_with_inclusion_proof(tree, nil, nil, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -159,14 +139,14 @@ defmodule SparseMerkle do
                 raise "key does not exist"
             l_dist < r_dist ->
                 # Going towards left child
-                get_with_inclusion_proof(tree, right, "R", left, k)
+                do_get_with_inclusion_proof(tree, right, "R", left, k)
             l_dist > r_dist ->
                 # Going towards right child
-                get_with_inclusion_proof(tree, left, "L", right, k)
+                do_get_with_inclusion_proof(tree, left, "L", right, k)
         end
     end
 
-    defp get_with_inclusion_proof(tree, sibling, direction, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
+    defp do_get_with_inclusion_proof(tree, sibling, direction, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
         if key == k do
             [{sibling.hash, direction}, m ]
         else
@@ -174,7 +154,7 @@ defmodule SparseMerkle do
         end
     end
 
-    defp get_with_inclusion_proof(tree, sibling, direction, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
+    defp do_get_with_inclusion_proof(tree, sibling, direction, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -186,22 +166,22 @@ defmodule SparseMerkle do
                 raise "key does not exist"
             l_dist < r_dist ->
                 # Going towards left child
-                [{sibling.hash, direction} | get_with_inclusion_proof(tree, right, "R", left, k)]
+                [{sibling.hash, direction} | do_get_with_inclusion_proof(tree, right, "R", left, k)]
             l_dist > r_dist ->
                 # Going towards right child
-                [{sibling.hash, direction} | get_with_inclusion_proof(tree, left, "L", right, k)]
+                [{sibling.hash, direction} | do_get_with_inclusion_proof(tree, left, "L", right, k)]
         end
     end
 
     def delete!(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k) do
         root = Bargad.Utils.get_node(tree, root)
-        new_root = delete(tree, root, k)
+        new_root = do_delete(tree, root, k)
         # deletes the existing root from the storage as there would be a new root
         Bargad.Utils.delete_node(tree, root.hash)
         Map.put(tree, :root, new_root.hash) |> Map.put(:size, size - 1)
     end
     
-    defp delete(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
+    defp do_delete(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -223,7 +203,7 @@ defmodule SparseMerkle do
                     raise "key does not exist"
                 l_dist < r_dist ->
                     # Going towards left child
-                    left = delete(tree, left, k)
+                    left = do_delete(tree, left, k)
                     # deletes the existing root from the storage as there would be a new root
                     Bargad.Utils.delete_node(tree, root.hash)
                     new_root = Bargad.Utils.make_map_node(tree, left, right)
@@ -231,7 +211,7 @@ defmodule SparseMerkle do
                     new_root
                 l_dist > r_dist ->
                     # Going towards right child
-                    right = delete(tree, right, k)
+                    right = do_delete(tree, right, k)
                     # deletes the existing root from the storage as there would be a new root
                     Bargad.Utils.delete_node(tree, root.hash)
                     new_root = Bargad.Utils.make_map_node(tree, left, right)
@@ -242,7 +222,7 @@ defmodule SparseMerkle do
     end
 
     ## Check if this would ever be called, if not then remove it.
-    defp delete(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
+    defp do_delete(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
         if key == k do
             IO.puts "found a key here"
         else
@@ -256,19 +236,37 @@ defmodule SparseMerkle do
 
     def audit_tree(tree) do
         root = Bargad.Utils.get_node(tree, tree.root)
-        audit_tree(tree, root, []) |> List.flatten
+        do_audit_tree(tree, root, []) |> List.flatten
     end
 
-    defp audit_tree(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, acc) do
+    defp do_audit_tree(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, acc) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
-        [audit_tree(tree, left, ["L" | acc])] ++
-        [audit_tree(tree, right, ["R" | acc])]
+        [do_audit_tree(tree, left, ["L" | acc])] ++
+        [do_audit_tree(tree, right, ["R" | acc])]
     end
 
-    defp audit_tree(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, acc) do
+    defp do_audit_tree(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, acc) do
         [m | acc] |> Enum.reverse |> List.to_tuple
+    end
+
+    defp distance(x, y) do
+        x = x |> Base.encode16 |> Integer.parse(16) |> elem(0)
+        y = y |> Base.encode16 |> Integer.parse(16) |> elem(0)
+
+        result = bxor(x, y) 
+
+        # xor with the same results in a zero, this check is done for when a person tries to insert an existing key
+        # xor becomes 0, for which log is undefined so we return a negative value to indicated that it is the minimum distance
+        if result == 0 do
+            -1
+        else
+            result = result |> :math.log2 |> trunc
+            # after log, diff was always 1 less than the actual
+            result + 1
+        end
+
     end
 
 end
