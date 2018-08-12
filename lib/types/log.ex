@@ -55,5 +55,15 @@ defmodule Bargad.Log do
     def verify_audit_proof(log, proof, value) do
         Merkle.verify_audit_proof(log,proof,value)
     end
+
+    def load_log(log_id) do
+        Bargad.TreeStorage.load_tree(log_id)
+    end
+
+    def delete_log(log_id) do
+        Bargad.TreeStorage.delete_tree(log_id)
+    end
+
+
     
 end

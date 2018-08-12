@@ -44,5 +44,13 @@ defmodule Bargad.Map do
         map
     end
 
+    def load_map(map_id) do
+        Bargad.TreeStorage.load_tree(map_id)
+    end
+
+    def delete_map(map_id) do
+        Bargad.TreeStorage.delete_tree(map_id)
+    end
+
 
 end
