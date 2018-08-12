@@ -17,14 +17,14 @@ defmodule SparseMerkle do
     use Bitwise
     
     # insertion in empty tree
-    def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: _, size: 0, hashFunction: _}, k, v) do
+    def insert(tree = %Bargad.Trees.Tree{size: 0}, k, v) do
         root = Bargad.Utils.make_map_node(tree, k, v)
         Bargad.Utils.set_node(tree, root.hash, root)
         Map.put(tree, :root, root.hash) |> Map.put(:size, 1)
     end
 
     # insertion in non empty tree
-    def insert(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k, v) do
+    def insert(tree = %Bargad.Trees.Tree{root: root, size: size}, k, v) do
         root = Bargad.Utils.get_node(tree, root)
         new_root = do_insert(tree, root, k, v)
         # basically don't delete the root if the tree contains only one node, and that would be a leaf node
@@ -36,7 +36,7 @@ defmodule SparseMerkle do
     end
 
 
-    defp do_insert(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [left, right], metadata: _, key: _, size: _}, k, v) do
+    defp do_insert(tree, root = %Bargad.Nodes.Node{children: [left, right]}, k, v) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -55,7 +55,6 @@ defmodule SparseMerkle do
                 Bargad.Utils.set_node(tree, new_leaf.hash, new_leaf)
 
                 min_key = min(left.key, right.key)
-                max_key = max(left.key, right.key)
 
                 if k < min_key do
                     # deletes the existing root from the storage as there would be a new root
@@ -94,7 +93,7 @@ defmodule SparseMerkle do
     end
 
 
-    defp do_insert(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: _, children: [], metadata: _, key: key, size: _}, k, v) do
+    defp do_insert(tree, leaf = %Bargad.Nodes.Node{children: [], metadata: _, key: key}, k, v) do
         new_leaf = Bargad.Utils.make_map_node(tree, k, v)
         Bargad.Utils.set_node(tree, new_leaf.hash, new_leaf)
 
@@ -120,14 +119,14 @@ defmodule SparseMerkle do
         end
     end
 
-    def get_with_inclusion_proof!(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k) do
+    def get_with_inclusion_proof!(tree = %Bargad.Trees.Tree{root: root}, k) do
         root = Bargad.Utils.get_node(tree, root)
         result = do_get_with_inclusion_proof(tree, nil, nil, root, k) |> Enum.reverse
         %{value: hd(result), proof: tl(result)}
     end
 
     # this is called only once, when starting
-    defp do_get_with_inclusion_proof(tree, nil, nil, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
+    defp do_get_with_inclusion_proof(tree, nil, nil, root = %Bargad.Nodes.Node{children: [left, right]}, k) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -146,7 +145,7 @@ defmodule SparseMerkle do
         end
     end
 
-    defp do_get_with_inclusion_proof(tree, sibling, direction, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
+    defp do_get_with_inclusion_proof(_, sibling, direction, leaf = %Bargad.Nodes.Node{children: [], metadata: m, key: key}, k) do
         if key == k do
             [{sibling.hash, direction}, m ]
         else
@@ -154,7 +153,7 @@ defmodule SparseMerkle do
         end
     end
 
-    defp do_get_with_inclusion_proof(tree, sibling, direction, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
+    defp do_get_with_inclusion_proof(tree, sibling, direction, root = %Bargad.Nodes.Node{children: [left, right]}, k) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -173,7 +172,7 @@ defmodule SparseMerkle do
         end
     end
 
-    def delete!(tree = %Bargad.Trees.Tree{treeId: _, treeType: _, backend: _, treeName: _, root: root, size: size, hashFunction: _}, k) do
+    def delete!(tree = %Bargad.Trees.Tree{root: root, size: size}, k) do
         root = Bargad.Utils.get_node(tree, root)
         new_root = do_delete(tree, root, k)
         # deletes the existing root from the storage as there would be a new root
@@ -181,11 +180,11 @@ defmodule SparseMerkle do
         Map.put(tree, :root, new_root.hash) |> Map.put(:size, size - 1)
     end
     
-    defp do_delete(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, k) do
+    defp do_delete(tree, root = %Bargad.Nodes.Node{children: [left, right]}, k) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
-        if check_for_leaf(tree, left, right, k) do
+        if check_for_leaf(left, right, k) do
             if left.key == k do
                 # deletes the target key
                 Bargad.Utils.delete_node(tree, left.hash)
@@ -222,7 +221,7 @@ defmodule SparseMerkle do
     end
 
     ## Check if this would ever be called, if not then remove it.
-    defp do_delete(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, k) do
+    defp do_delete(_, leaf = %Bargad.Nodes.Node{children: [], key: key}, k) do
         if key == k do
             IO.puts "found a key here"
         else
@@ -230,7 +229,7 @@ defmodule SparseMerkle do
         end
     end
 
-    defp check_for_leaf(tree, left, right, k) do
+    defp check_for_leaf(left, right, k) do
         (left.size == 1 && left.key == k) || (right.size == 1 && right.key == k)
     end
 
@@ -239,7 +238,7 @@ defmodule SparseMerkle do
         do_audit_tree(tree, root, []) |> List.flatten
     end
 
-    defp do_audit_tree(tree, root = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [left, right], metadata: _, key: _, size: _}, acc) do
+    defp do_audit_tree(tree, root = %Bargad.Nodes.Node{children: [left, right]}, acc) do
         left = Bargad.Utils.get_node(tree, left)
         right = Bargad.Utils.get_node(tree, right)
 
@@ -247,7 +246,7 @@ defmodule SparseMerkle do
         [do_audit_tree(tree, right, ["R" | acc])]
     end
 
-    defp do_audit_tree(tree, leaf = %Bargad.Nodes.Node{ treeId: _, hash: hash, children: [], metadata: m, key: key, size: _}, acc) do
+    defp do_audit_tree(_, leaf = %Bargad.Nodes.Node{children: [], metadata: m}, acc) do
         [m | acc] |> Enum.reverse |> List.to_tuple
     end
 
