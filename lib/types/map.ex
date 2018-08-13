@@ -33,9 +33,8 @@ defmodule Bargad.Map do
         ## ADD CACHING to speed up get process
     end
 
-    def verify_inclusion_proof(map, proof, value) do
-        leaf_hash = Bargad.Utils.make_hash(map, value)
-        Merkle.verify_audit_proof(map, proof, leaf_hash)
+    def verify_inclusion_proof(map, proof) do
+        Merkle.verify_audit_proof(map, proof)
     end
 
     def delete(map, key) do

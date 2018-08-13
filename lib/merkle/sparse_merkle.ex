@@ -121,8 +121,8 @@ defmodule SparseMerkle do
 
     def get_with_inclusion_proof!(tree = %Bargad.Trees.Tree{root: root}, k) do
         root = Bargad.Utils.get_node(tree, root)
-        result = do_get_with_inclusion_proof(tree, nil, nil, root, k) |> Enum.reverse
-        %{value: hd(result), proof: tl(result)}
+        [ {value, hash} | proof] = do_get_with_inclusion_proof(tree, nil, nil, root, k) |> Enum.reverse
+        %{value: value, hash: hash, proof: proof}
     end
 
     # this is called only once, when starting
@@ -145,9 +145,9 @@ defmodule SparseMerkle do
         end
     end
 
-    defp do_get_with_inclusion_proof(_, sibling, direction, leaf = %Bargad.Nodes.Node{children: [], metadata: m, key: key}, k) do
+    defp do_get_with_inclusion_proof(_, sibling, direction, leaf = %Bargad.Nodes.Node{hash: salted_hash, children: [], metadata: value, key: key}, k) do
         if key == k do
-            [{sibling.hash, direction}, m ]
+            [{sibling.hash, direction}, {value, salted_hash} ]
         else
             raise "key does not exist"
         end

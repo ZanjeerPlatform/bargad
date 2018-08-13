@@ -220,7 +220,7 @@ defmodule BargadTest do
 
       tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1"])
 
-      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [], value: "1"}
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [], value: "1", hash: @h1}
 
     end
 
@@ -228,9 +228,9 @@ defmodule BargadTest do
 
       tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2"])
 
-      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}], value: "1"}
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}], value: "1", hash: @h1}
 
-      assert Bargad.Log.audit_proof(tree, 2) == %{proof: [{@h1, "L"}], value: "2"}
+      assert Bargad.Log.audit_proof(tree, 2) == %{proof: [{@h1, "L"}], value: "2", hash: @h2}
       
     end
 
@@ -238,11 +238,13 @@ defmodule BargadTest do
 
       tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2", "3"])
 
-      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3, "R"}], value: "1"}
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3, "R"}], value: "1", hash: @h1}
 
-      assert Bargad.Log.audit_proof(tree, 2) == %{proof: [{@h1, "L"}, {@h3, "R"}], value: "2"}
+      assert Bargad.Log.verify_audit_proof(tree, Bargad.Log.audit_proof(tree, 1))
+      
+      assert Bargad.Log.audit_proof(tree, 2) == %{proof: [{@h1, "L"}, {@h3, "R"}], value: "2", hash: @h2}
 
-      assert Bargad.Log.audit_proof(tree, 3) == %{proof: [{@h1_2, "L"}], value: "3"}
+      assert Bargad.Log.audit_proof(tree, 3) == %{proof: [{@h1_2, "L"}], value: "3", hash: @h3}
       
     end
 
@@ -250,9 +252,9 @@ defmodule BargadTest do
       
       tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1", "2", "3", "4", "5", "6"])
 
-      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3_4, "R"}, {@h5_6, "R"}], value: "1"}
+      assert Bargad.Log.audit_proof(tree, 1) == %{proof: [{@h2, "R"}, {@h3_4, "R"}, {@h5_6, "R"}], value: "1", hash: @h1}
 
-      assert Bargad.Log.audit_proof(tree, 5) == %{proof: [{@h6, "R"},{@h1_2_3_4, "L"}], value: "5"}
+      assert Bargad.Log.audit_proof(tree, 5) == %{proof: [{@h6, "R"},{@h1_2_3_4, "L"}], value: "5", hash: @h5}
       
     end
     
@@ -300,7 +302,7 @@ defmodule BargadTest do
              |> Bargad.Map.set(@k6, "6")
              |> Bargad.Map.set(@k2, "2")
 
-      assert Bargad.Map.get(map, @k2) == %{proof: [{Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k1, "1")), "L"}, { Bargad.Utils.make_hash(map, Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k6, "6")) <> Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k7, "7"))) , "R"}], value: "2"} 
+      assert Bargad.Map.get(map, @k2) == %{proof: [{Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k1, "1")), "L"}, { Bargad.Utils.make_hash(map, Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k6, "6")) <> Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k7, "7"))) , "R"}], value: "2", hash: Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k2, "2"))} 
     end
 
 

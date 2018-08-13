@@ -52,8 +52,8 @@ defmodule Bargad.Log do
         Merkle.verify_consistency_proof(log, proof, old_root_hash)
     end
 
-    def verify_audit_proof(log, proof, value) do
-        Merkle.verify_audit_proof(log,proof,value)
+    def verify_audit_proof(log, proof) do
+        Merkle.verify_audit_proof(log, proof)
     end
 
     def load_log(log_id) do

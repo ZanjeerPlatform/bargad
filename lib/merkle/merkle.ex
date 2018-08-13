@@ -45,7 +45,7 @@ defmodule Merkle do
   def audit_proof(tree = %Bargad.Trees.Tree{root: root, size: 1}, m) do
     root = Bargad.Utils.get_node(tree, root)
     if m == 1 do
-      %{value: root.metadata, proof: []}
+      %{value: root.metadata, proof: [], hash: root.hash}
     else
       raise "value out of range"
     end
@@ -57,8 +57,8 @@ defmodule Merkle do
       raise "value not in range"
     else
     root = Bargad.Utils.get_node(tree, tree.root)
-    result = do_audit_proof(tree, nil, nil, root, m) |> Enum.reverse
-    %{value: hd(result), proof: tl(result)}
+    [ {value, hash} | proof] = do_audit_proof(tree, nil, nil, root, m) |> Enum.reverse
+    %{value: value, hash: hash, proof: proof}
     end
   end
 
@@ -89,28 +89,28 @@ defmodule Merkle do
 
   end
 
-  defp do_audit_proof(_, sibling, direction, leaf = %Bargad.Nodes.Node{children: [], metadata: value}, _) do
-    [{sibling.hash, direction}, value ]
+  defp do_audit_proof(_, sibling, direction, leaf = %Bargad.Nodes.Node{hash: salted_hash, children: [], metadata: value}, _) do
+    [{sibling.hash, direction}, {value, salted_hash}]
   end
 
-  defp verify_audit_proof(leaf_hash, [], _, _) do
-    leaf_hash
-  end
-
-  @spec verify_audit_proof(binary, Bargad.Types.audit_proof, Bargad.Types.tree, term) :: binary
-  defp verify_audit_proof(leaf_hash, [{hash, direction} | t], tree, _) do
-    case direction do
-      "L" -> Bargad.Utils.make_hash(tree, hash <> leaf_hash) |> verify_audit_proof(t, tree,0)
-      "R" -> Bargad.Utils.make_hash(tree, leaf_hash <> hash) |> verify_audit_proof(t, tree,0)
-    end
-  end
-
-  @spec verify_audit_proof(Bargad.Types.tree, Bargad.Types.audit_proof, binary) :: boolean
-  def verify_audit_proof(tree, proof, leaf_hash) do
-    if( tree.root == verify_audit_proof(leaf_hash, proof, tree,0)) do
+  @spec verify_audit_proof(Bargad.Types.tree, Bargad.Types.audit_proof) :: boolean
+  def verify_audit_proof(tree, proof) do
+    if( tree.root == do_verify_audit_proof(proof.hash, proof.proof, tree)) do
       true
     else 
       false
+    end
+  end
+
+  defp do_verify_audit_proof(leaf_hash, [], _) do
+    leaf_hash
+  end
+
+  @spec do_verify_audit_proof(binary, Bargad.Types.audit_proof, Bargad.Types.tree) :: binary
+  defp do_verify_audit_proof(leaf_hash, [{hash, direction} | t], tree) do
+    case direction do
+      "L" -> Bargad.Utils.make_hash(tree, hash <> leaf_hash) |> do_verify_audit_proof(t, tree)
+      "R" -> Bargad.Utils.make_hash(tree, leaf_hash <> hash) |> do_verify_audit_proof(t, tree)
     end
   end
 
