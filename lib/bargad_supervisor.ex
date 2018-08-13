@@ -38,7 +38,8 @@ defmodule Bargad.Supervisor do
 
   def init(:ok) do
     children = [
-      {Bargad.LogClient, name: Bargad.LogClient}
+      {Bargad.LogClient, name: Bargad.LogClient},
+      {Bargad.MapClient, name: Bargad.MapClient}
     ]
     Supervisor.init(children, strategy: :one_for_one)
   end

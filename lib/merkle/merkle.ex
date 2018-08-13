@@ -42,6 +42,7 @@ defmodule Merkle do
     node
   end
 
+  @spec build(Bargad.Types.tree, pos_integer) :: Bargad.Types.audit_proof
   def audit_proof(tree = %Bargad.Trees.Tree{root: root, size: 1}, m) do
     root = Bargad.Utils.get_node(tree, root)
     if m == 1 do
@@ -51,6 +52,7 @@ defmodule Merkle do
     end
   end
 
+  @spec build(Bargad.Types.tree, pos_integer) :: Bargad.Types.audit_proof
   def audit_proof(tree, m) do
     #check left and right subtree, go wherever the value is closer
     if m > tree.size || m <= 0 do
@@ -106,7 +108,6 @@ defmodule Merkle do
     leaf_hash
   end
 
-  @spec do_verify_audit_proof(binary, Bargad.Types.audit_proof, Bargad.Types.tree) :: binary
   defp do_verify_audit_proof(leaf_hash, [{hash, direction} | t], tree) do
     case direction do
       "L" -> Bargad.Utils.make_hash(tree, hash <> leaf_hash) |> do_verify_audit_proof(t, tree)
@@ -156,11 +157,11 @@ defmodule Merkle do
     Bargad.Utils.make_hash(tree, first<>second)
   end
 
-  @spec do_verify_consistency_proof(Bargad.Types.tree, Bargad.Types.consistency_proof) :: binary
   defp do_verify_consistency_proof(tree, [head | tail]) do
     Bargad.Utils.make_hash(tree, head <> do_verify_consistency_proof(tree,tail))
   end
 
+  @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.tree
   def insert(tree = %Bargad.Trees.Tree{size: 0}, x) do
     node = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
     Bargad.Utils.set_node(tree, node.hash, node)

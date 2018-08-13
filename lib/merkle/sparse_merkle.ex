@@ -17,6 +17,7 @@ defmodule SparseMerkle do
     use Bitwise
     
     # insertion in empty tree
+    @spec insert(Bargad.Types.tree, binary, binary) :: Bargad.Types.tree
     def insert(tree = %Bargad.Trees.Tree{size: 0}, k, v) do
         root = Bargad.Utils.make_map_node(tree, k, v)
         Bargad.Utils.set_node(tree, root.hash, root)
@@ -24,6 +25,7 @@ defmodule SparseMerkle do
     end
 
     # insertion in non empty tree
+    @spec insert(Bargad.Types.tree, binary, binary) :: Bargad.Types.tree
     def insert(tree = %Bargad.Trees.Tree{root: root, size: size}, k, v) do
         root = Bargad.Utils.get_node(tree, root)
         new_root = do_insert(tree, root, k, v)
@@ -119,6 +121,7 @@ defmodule SparseMerkle do
         end
     end
 
+    @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.audit_proof
     def get_with_inclusion_proof!(tree = %Bargad.Trees.Tree{root: root}, k) do
         root = Bargad.Utils.get_node(tree, root)
         [ {value, hash} | proof] = do_get_with_inclusion_proof(tree, nil, nil, root, k) |> Enum.reverse
@@ -172,6 +175,7 @@ defmodule SparseMerkle do
         end
     end
 
+    @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.tree
     def delete!(tree = %Bargad.Trees.Tree{root: root, size: size}, k) do
         root = Bargad.Utils.get_node(tree, root)
         new_root = do_delete(tree, root, k)
