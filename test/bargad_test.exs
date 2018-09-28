@@ -296,13 +296,18 @@ defmodule BargadTest do
 
     test "get with inclusion proof for a map" do
 
+
       map = Bargad.Map.new("map", :sha256, [{"module", "ETSBackend"}])
              |> Bargad.Map.set(@k1, "1")
              |> Bargad.Map.set(@k7, "7")
              |> Bargad.Map.set(@k6, "6")
              |> Bargad.Map.set(@k2, "2")
 
-      assert Bargad.Map.get(map, @k2) == %{proof: [{Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k1, "1")), "L"}, { Bargad.Utils.make_hash(map, Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k6, "6")) <> Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k7, "7"))) , "R"}], value: "2", hash: Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k2, "2"))} 
+      # IO.inspect SparseMerkle.audit_tree(map)
+
+      IO.inspect Bargad.Map.get(map, @k0)
+
+      assert Bargad.Map.get(map, @k2) == %{key: @k2, proof: [{Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k1, "1")), "L"}, { Bargad.Utils.make_hash(map, Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k6, "6")) <> Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k7, "7"))) , "R"}], value: "2", hash: Bargad.Utils.make_hash(map, Bargad.Utils.salt_node(@k2, "2"))} 
     end
 
 

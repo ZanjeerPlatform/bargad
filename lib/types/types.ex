@@ -44,7 +44,9 @@ defmodule Bargad.Types do
 
     @type direction :: binary
 
-    @type audit_proof :: [{hash, direction}, ...] | :not_found
+    # @type audit_proof :: [{hash, direction}, ...] | :not_found
+
+    @type audit_proof :: term
 
     @type consistency_proof :: [hash, ...]
 

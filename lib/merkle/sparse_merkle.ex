@@ -121,7 +121,7 @@ defmodule SparseMerkle do
         end
     end
 
-    @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.audit_proof
+    @spec get_with_inclusion_proof!(Bargad.Types.tree, binary) :: Bargad.Types.audit_proof
     def get_with_inclusion_proof!(tree = %Bargad.Trees.Tree{root: root}, k) do
         root = Bargad.Utils.get_node(tree, root)
 
@@ -131,18 +131,18 @@ defmodule SparseMerkle do
             # membership proof case
             [{_, _} | _] -> 
                 [{value, hash} | proof] = Enum.reverse(result)
-                %{value: value, hash: hash, proof: proof}
+                %{key: k, value: value, hash: hash, proof: proof}
 
             # Edge Case 1 for non-membership proof
-            [key, :MINRS] -> [do_get_with_inclusion_proof(tree, nil, nil, root, key), nil]
+            [key, :MINRS] -> [get_with_inclusion_proof!(tree, key), nil]
 
             # Edge Case 2 for non-membership proof
-            [:MAXLS, key] -> [nil, do_get_with_inclusion_proof(tree, nil, nil, root, key)]
+            [:MAXLS, key] -> [nil, get_with_inclusion_proof!(tree, key)]
     
             # When a key is bounded by two keys in case of non-membership proof
             [key1, key2] -> 
-                [do_get_with_inclusion_proof(tree, nil, nil, root, key1),
-                do_get_with_inclusion_proof(tree, nil, nil, root, key2)]
+                [get_with_inclusion_proof!(tree, key1),
+                get_with_inclusion_proof!(tree,key2)]
         end
     end
 
@@ -157,24 +157,25 @@ defmodule SparseMerkle do
         cond do
             l_dist == r_dist ->
                 case k > root.key do
-                    true -> [get_with_inclusion_proof(tree, right.key), :MINRS]
-                    _ -> [:MAXLS, get_with_inclusion_proof(tree, right.key)]
+                    true -> [right.key, :MINRS]
+                    _ -> [:MAXLS, left.key]
                 end
             l_dist < r_dist ->
                 # Going towards left child
-                do_get_with_inclusion_proof(tree, right, "R", left, k)
+                do_get_with_inclusion_proof(tree, right, "L", left, k)
             l_dist > r_dist ->
                 # Going towards right child
-                do_get_with_inclusion_proof(tree, left, "L", right, k)
+                do_get_with_inclusion_proof(tree, left, "R", right, k)
         end
     end
 
-    defp do_get_with_inclusion_proof(_, sibling, direction, leaf = %Bargad.Nodes.Node{hash: salted_hash, children: [], metadata: value, key: key}, k) do
+    defp do_get_with_inclusion_proof(tree, sibling, direction, leaf = %Bargad.Nodes.Node{hash: salted_hash, children: [], metadata: value, key: key}, k) do
         if key == k do
-            [{sibling.hash, direction}, {value, salted_hash} ]
+            [{sibling.hash, rev_dir(direction)}, {value, salted_hash} ]
         else
             # Find the non membership proof otherwise
-            get_non_inclusion_proof({k, key, direction, sibling})
+            IO.inspect key
+            get_non_inclusion_proof({tree, k, key, direction, sibling})
             # raise "key does not exist"
         end
     end
@@ -189,50 +190,49 @@ defmodule SparseMerkle do
         cond do
             l_dist == r_dist ->
                 # Find the non membership proof otherwise
-
                 get_non_inclusion_proof({k, root.key, direction, sibling})
 
                 # raise "key does not exist"
             l_dist < r_dist ->
                 # Going towards left child
-                result = do_get_with_inclusion_proof(tree, right, "R", left, k)
+                result = do_get_with_inclusion_proof(tree, right, "L", left, k)
 
                 case { result, direction } do
                     # membership proof case
-                    {[{_, _} | _], _} -> [{sibling.hash, direction} | result]
-                    {[key, :MINRS],"L"} -> [key, min_in_subtree(sibling)]
+                    {[{_, _} | _], _} -> [{sibling.hash, rev_dir(direction)} | result]
+                    {[key, :MINRS],"L"} -> [key, min_in_subtree(tree, sibling)]
                     {[:MAXLS, key], "R"} -> [max_in_subtree(sibling), key]
                     _ -> result
                 end
 
             l_dist > r_dist ->
                 # Going towards right child
-                result = do_get_with_inclusion_proof(tree, left, "L", right, k)
+                result = do_get_with_inclusion_proof(tree, left, "R", right, k)
 
                 case { result, direction } do
                     # membership proof case
-                    {[{_, _} | _], _} -> [{sibling.hash, direction} | result]
-                    {[key, :MINRS],"L"} -> [key, min_in_subtree(sibling)] 
+                    {[{_, _} | _], _} -> [{sibling.hash, rev_dir(direction)} | result]
+                    {[key, :MINRS],"L"} -> [key, min_in_subtree(tree, sibling)] 
                     {[:MAXLS, key], "R"} -> [max_in_subtree(sibling), key]
                     _ -> result
                 end
         end
     end
 
-    defp get_non_inclusion_proof({k, key, direction, sibling}) do
+    defp get_non_inclusion_proof({tree, k, key, direction, sibling}) do
         case [k > key, direction] do
-            [true, "L"] ->  [key, min_in_subtree(sibling)]
+            [true, "L"] ->  [key, min_in_subtree(tree, sibling)]
             [true, "R"] ->  [key, :MINRS]
             [false, "L"] -> [:MAXLS, key]
             [false, "R"] -> [max_in_subtree(sibling), key]
         end
     end
 
-    defp min_in_subtree(%Bargad.Nodes.Node{children: [left, _]}) do
-        min_in_subtree(left)
+    defp min_in_subtree(tree, %Bargad.Nodes.Node{children: [left, _]}) do
+        min_in_subtree(tree, Bargad.Utils.get_node(tree, left))
     end
 
-    defp min_in_subtree(%Bargad.Nodes.Node{children: [], key: key}) do
+    defp min_in_subtree(_, %Bargad.Nodes.Node{children: [], key: key}) do
         key
     end
 
@@ -240,7 +240,7 @@ defmodule SparseMerkle do
         root.key
     end
 
-    @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.tree
+    @spec delete!(Bargad.Types.tree, binary) :: Bargad.Types.tree
     def delete!(tree = %Bargad.Trees.Tree{root: root, size: size}, k) do
         root = Bargad.Utils.get_node(tree, root)
         new_root = do_delete(tree, root, k)
@@ -336,5 +336,13 @@ defmodule SparseMerkle do
         end
 
     end
+
+    defp rev_dir(dir) do
+        case dir do
+            "L" -> "R"
+            _ -> "L"
+        end
+    end
+
 
 end
