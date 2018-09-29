@@ -174,7 +174,6 @@ defmodule SparseMerkle do
             [{sibling.hash, rev_dir(direction)}, {value, salted_hash} ]
         else
             # Find the non membership proof otherwise
-            IO.inspect key
             get_non_inclusion_proof({tree, k, key, direction, sibling})
             # raise "key does not exist"
         end

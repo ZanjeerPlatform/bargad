@@ -101,7 +101,7 @@ defmodule Bargad.LogClient do
     @doc """
     Verifies the generated audit proof.
 
-    The event handler for this request calls `Bargad.Log.verify_audit_proof/3` with the specified arguments.
+    The event handler for this request calls `Bargad.Log.verify_audit_proof/2` with the specified arguments.
     """
     @spec verify_audit_proof(request) :: boolean
     def verify_audit_proof(args) do
