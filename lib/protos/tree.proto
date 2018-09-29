@@ -28,7 +28,7 @@ message Tree {
     sha512 = 6;
   }
 
-  required int64 treeId = 1;
+  required bytes treeId = 1;
   required TreeType treeType = 2;
   required HashFunction hashFunction = 3;
   required bytes root = 4;

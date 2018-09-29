@@ -20,7 +20,7 @@ defmodule Bargad.Types do
     @type backend :: [{binary,binary}, ...]
     @type values :: [binary,...]
     @type children :: [binary] | []
-    @type tree_id :: non_neg_integer
+    @type tree_id :: binary
     @type tree_name :: binary
     @type size :: pos_integer
 

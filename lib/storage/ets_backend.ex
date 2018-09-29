@@ -24,7 +24,7 @@ defmodule ETSBackend do
     Creates a new table in the form of `treeId_nodes` and stores this information in the `backend` field of the tree.
     """
     def init_backend(tree) do
-        nodes_table = String.to_atom("nodes" <> "_" <> Integer.to_string(tree.treeId))
+        nodes_table = String.to_atom("nodes" <> "_" <> tree.treeId)
         :ets.new(nodes_table, [:set, :public, :named_table])
         backend = tree.backend ++ [{"nodes_table",Atom.to_string(nodes_table)}]
         Map.put(tree, :backend, backend)

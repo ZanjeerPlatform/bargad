@@ -13,7 +13,7 @@
 // limitations under the License.
 
 message Node {
-  required int64 treeId = 1;
+  required bytes treeId = 1;
   required bytes hash = 2;
   repeated bytes children = 3;
   required int64 size = 4;
