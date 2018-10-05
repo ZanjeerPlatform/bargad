@@ -13,6 +13,36 @@
 # limitations under the License.
 
 defmodule Bargad.Trees do
+    @moduledoc """
+    Protobuf definition for a tree
+    ```
+    message Tree {
+
+        enum TreeType {
+        LOG = 1;
+        MAP = 2;
+        }
+
+        enum HashFunction {
+            md5 = 1;  
+            sha = 2;
+            sha224 = 3;
+            sha256 = 4;
+            sha384 = 5;
+            sha512 = 6;
+        }
+
+        required bytes treeId = 1;
+        required TreeType treeType = 2;
+        required HashFunction hashFunction = 3;
+        required bytes root = 4;
+        required int64 size = 5;
+        map<string,string> backend = 6;
+        optional string treeName = 7;
+    }
+    ```
+    """
+    @doc false
     @external_resource Path.expand("./tree.proto", __DIR__)
     use Protobuf, from: Path.expand("./tree.proto", __DIR__)
 end
