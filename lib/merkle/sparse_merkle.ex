@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule SparseMerkle do
+defmodule Bargad.SparseMerkle do
 
     use Bitwise
     

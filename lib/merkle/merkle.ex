@@ -1,4 +1,4 @@
-defmodule Merkle do
+defmodule Bargad.Merkle do
   
   use Bitwise
 

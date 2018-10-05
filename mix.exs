@@ -48,7 +48,8 @@ defmodule Bargad.MixProject do
         Bargad.TreeStorage
       ],
       Merkle: [
-        Merkle
+        Bargad.Merkle,
+        Bargad.SparseMerkle
       ],
       Utils: [
         Bargad.Utils

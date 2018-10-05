@@ -291,7 +291,7 @@ defmodule BargadTest do
              |> Bargad.Map.set(@k6, "6")
              |> Bargad.Map.set(@k2, "2")
 
-      assert SparseMerkle.audit_tree(map) == [{"L", "L", "1"}, {"L", "R", "2"}, {"R", "L", "6"}, {"R", "R", "7"}]
+      assert Bargad.SparseMerkle.audit_tree(map) == [{"L", "L", "1"}, {"L", "R", "2"}, {"R", "L", "6"}, {"R", "R", "7"}]
     end
 
     test "get with inclusion proof for a map" do
@@ -331,7 +331,7 @@ defmodule BargadTest do
 
       map = Bargad.Map.delete(map, @k2)
 
-      assert SparseMerkle.audit_tree(map) == [{"L", "1"}, {"R", "L", "6"}, {"R", "R", "7"}] 
+      assert Bargad.SparseMerkle.audit_tree(map) == [{"L", "1"}, {"R", "L", "6"}, {"R", "R", "7"}] 
     end
 
 

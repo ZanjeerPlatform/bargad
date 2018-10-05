@@ -13,23 +13,21 @@
 # limitations under the License.
 
 defmodule Bargad.Utils do
-
   @moduledoc """
-  Utility functions required by `Merkle`, `Bargad.Log`, `Bargad.Map`.
+  Utility functions required by `Bargad.Merkle`, `Bargad.Log`, `Bargad.Map`.
   """
 
-  @type tree :: Bargad.Types.tree
+  @type tree :: Bargad.Types.tree()
 
-  @type tree_node :: Bargad.Types.tree_node
+  @type tree_node :: Bargad.Types.tree_node()
 
-  @type tree_type :: Bargad.Types.tree_type
+  @type tree_type :: Bargad.Types.tree_type()
 
-  @type backend :: Bargad.Types.backend
+  @type backend :: Bargad.Types.backend()
 
-  @type hash_algorithm :: Bargad.Types.hash_algorithm
+  @type hash_algorithm :: Bargad.Types.hash_algorithm()
 
-  @type hash :: Bargad.Types.hash
-
+  @type hash :: Bargad.Types.hash()
 
   @doc """
   Generates a unique TreeId for every tree.
@@ -38,7 +36,7 @@ defmodule Bargad.Utils do
   """
   def generate_tree_id() do
     UUID.uuid4(:hex)
-    #:rand.uniform(100000)
+    # :rand.uniform(100000)
   end
 
   @doc """
@@ -54,7 +52,7 @@ defmodule Bargad.Utils do
   @doc """
   Creates a new tree of type `t:tree/0`. 
 
-  Called by `Merkle.new/4` when a new `Bargad.Map` or `Bargad.Log` has to be created.
+  Called by `Bargad.Merkle.new/4` when a new `Bargad.Map` or `Bargad.Log` has to be created.
   """
   @spec make_tree(tree_type, binary, hash_algorithm, backend) :: tree
   def make_tree(tree_type, tree_name, hash_function, backend) do
@@ -71,7 +69,7 @@ defmodule Bargad.Utils do
   @doc """
   Creates a new node in the tree of type `t:tree_node/0`. 
   """
-  
+
   def make_node(tree, hash, children, size, metadata) do
     Bargad.Nodes.Node.new(
       treeId: tree.treeId,
@@ -84,7 +82,7 @@ defmodule Bargad.Utils do
 
   @doc """
   Creates an inner node  in the tree of type `t:tree_node/0`. 
-  
+
   Creates a new node with its children as `left` and `right`.
   """
   def make_node(tree, left, right) do
@@ -98,7 +96,11 @@ defmodule Bargad.Utils do
     )
   end
 
-  def make_map_node(tree, left = %Bargad.Nodes.Node{ treeId: _, hash: _, children: _, metadata: _, key: _, size: _}, right) do
+  def make_map_node(
+        tree,
+        left = %Bargad.Nodes.Node{treeId: _, hash: _, children: _, metadata: _, key: _, size: _},
+        right
+      ) do
     Bargad.Nodes.Node.new(
       treeId: tree.treeId,
       hash: Bargad.Utils.make_hash(tree, left.hash <> right.hash),
@@ -131,7 +133,7 @@ defmodule Bargad.Utils do
   Hashes the binary data supplied based on the hash algorithm `t:hash_algorithm/0` specified in `t:tree`. 
   """
   def make_hash(tree, data) do
-    :crypto.hash(tree.hashFunction, data) 
+    :crypto.hash(tree.hashFunction, data)
   end
 
   @doc false
