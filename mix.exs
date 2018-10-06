@@ -4,14 +4,35 @@ defmodule Bargad.MixProject do
   def project do
     [
       app: :bargad,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-
+      description: description(),
+      package: package(),
       name: "Bargad",
       source_url: "https://github.com/farazhaider/bargad",
       docs: docs()
+    ]
+  end
+
+  defp description do
+    "A backend which enables applications to provide Cryptographic Transparency guarantees for data by using 
+     Binary and Sparse Merkle Trees."
+  end
+
+  defp package do
+    [
+      # This option is only needed when you don't want to use the OTP application name
+      name: "bargad",
+      # These are the default files included in the package
+      files: ~w(lib .formatter.exs mix.exs README.md license.md),
+      maintainers: ["Faraz Haider"],
+      licenses: ["Apache 2.0"],
+      links: %{
+        "GitHub" => "https://github.com/ZanjeerPlatform/bargad",
+        "Documentation" => "https://hexdocs.pm/bargad"
+      }
     ]
   end
 
@@ -23,7 +44,6 @@ defmodule Bargad.MixProject do
       groups_for_modules: groups_for_modules()
     ]
   end
-
 
   def extras do
     ["README.md"]
@@ -80,7 +100,7 @@ defmodule Bargad.MixProject do
     [
       {:exprotobuf, "~> 1.2"},
       {:ex_doc, "~> 0.18.0", only: :dev, runtime: false},
-      {:elixir_uuid, "~> 1.2" }
+      {:elixir_uuid, "~> 1.2"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
     ]

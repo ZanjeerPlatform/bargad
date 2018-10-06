@@ -124,7 +124,6 @@ defmodule Bargad do
     ...> Bargad.Log.new("FRZ", :sha256, [{"module", "ETSBackend"}]) |>
     ...> Bargad.Log.insert("3") |>
     ...> Bargad.Log.insert("7")
-
     iex> audit_proof = Bargad.Log.audit_proof(tree, 1)
     %{
       hash: <<63, 219, 163, 95, 4, 220, 140, 70, 41, 134, 201, 146, 188, 248, 117,
@@ -137,15 +136,14 @@ defmodule Bargad do
       ],
       value: "3"
     }
-
     iex(3)> Bargad.Log.verify_audit_proof(tree, audit_proof)
     true
-
     iex(2)> consistency_proof = Bargad.Log.consistency_proof(tree, 1) 
     [                                                                              
-      <<63, 219, 163, 95, 4, 220, 140, 70, 41, 134, 201, 146, 188, 248, 117, 84, 98
-        87, 17, 48, 114, 169, 9, 193, 98, 247, 228, 112, 229, 129, 226, 120>>      
+      <<63, 219, 163, 95, 4, 220, 140, 70, 41, 134, 201, 146, 188, 248, 117, 84, 98, 
+       87, 17, 48, 114, 169, 9, 193, 98, 247, 228, 112, 229, 129, 226, 120>>      
     ]
+
   ```
 
 
