@@ -1,4 +1,8 @@
-# Bargad 
+# Bargad
+
+[![Hex.pm](https://img.shields.io/hexpm/v/bargad.svg)](https://hex.pm/packages/bargad)
+![Hex.pm](https://img.shields.io/hexpm/l/bargad.svg)
+
 
 ### Overview
 
