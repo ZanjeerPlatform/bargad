@@ -17,7 +17,7 @@ defmodule Bargad do
 
   ### Overview
 
-  Bargad is a service which implements the concepts and data strucutures described in the **Certificate Transparency** whitepaper [RFC6962](https://tools.ietf.org/html/rfc6962) and the [**Revocation Transparency**](https://www.links.org/files/RevocationTransparency.pdf "**Revocation Transparency**") whitepaper.
+  Bargad is a service which implements the concepts and data strucutures described in the **Certificate Transparency** whitepaper [RFC6962](https://tools.ietf.org/html/rfc6962) and the [**Compact Sparse Merkle tree**](https://osf.io/8mcnh/download) whitepaper.
 
   The data structures mentioned above are implemented through a **Merkle tree**  which provides all the crytographic guarantees for the data.
   We provide a **storage layer** for this Merkle tree which allows us to scale it for extremely large sets of data. This storage layer is flexible to accomodate many types of backends.
@@ -88,7 +88,7 @@ defmodule Bargad do
   ```elixir
   defp deps do
   [
-    {:bargad, "~> 0.1.0"}
+    {:bargad, "~> 1.0.0"}
   ]
   end
   ```
