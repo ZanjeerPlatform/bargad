@@ -1,8 +1,8 @@
 # Bargad
 
+![Travis (.org)](https://img.shields.io/travis/ZanjeerPlatform/bargad.svg)
 [![Hex.pm](https://img.shields.io/hexpm/v/bargad.svg)](https://hex.pm/packages/bargad)
 ![Hex.pm](https://img.shields.io/hexpm/l/bargad.svg)
-
 
 ### Overview
 

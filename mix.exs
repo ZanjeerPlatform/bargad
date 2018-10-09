@@ -17,8 +17,7 @@ defmodule Bargad.MixProject do
   end
 
   defp description do
-    "A backend which enables applications to provide Cryptographic Transparency guarantees for data by using 
-     Binary and Sparse Merkle Trees."
+    "A Data Integrity framework for building efficient blockchains, transparency logs and secure file systems among others."
   end
 
   defp package do
@@ -30,8 +29,7 @@ defmodule Bargad.MixProject do
       maintainers: ["Faraz Haider"],
       licenses: ["Apache 2.0"],
       links: %{
-        "GitHub" => "https://github.com/ZanjeerPlatform/bargad",
-        "Documentation" => "https://hexdocs.pm/bargad"
+        "GitHub" => "https://github.com/ZanjeerPlatform/bargad"
       }
     ]
   end
