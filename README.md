@@ -42,7 +42,7 @@
 
 ### Comparison
 
-  |                                       | Bargad | Trillian | Merkle Patricia Tree | Merkle Tree |
+  |                                       | Bargad | [Trillian](https://github.com/google/trillian) | [Merkle Patricia Tree](https://github.com/exthereum/merkle_patricia_tree) | [Merkle Tree](https://github.com/yosriady/merkle_tree) |
   |---------------------------------------|--------|----------|----------------------|-------------|
   | Persistence                           | Yes    | Yes      | Yes                  | No          |
   | Multiple Backends                     | Yes    | Yes      | Yes                  | No          |
