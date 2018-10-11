@@ -77,7 +77,7 @@
   ```elixir
   defp deps do
   [
-    {:bargad, "~> 1.0.0"}
+    {:bargad, "~> 1.0"}
   ]
   end
   ```
