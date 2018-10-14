@@ -14,7 +14,7 @@
   The Bargad service can operate in two modes
   - **Log Mode** - A verifiable append only log which is filled from left to right and provides the proof for **inclusion** and **consistency** of data.
 
-  - **Map Mode** - A verifiable map which allows for the storage and retrieval of key value pairs and provides a cryptographich proof for the **inclusion** of this data.
+  - **Map Mode** - A verifiable map which allows for the storage and retrieval of key value pairs and provides a cryptographic proof for the **inclusion** of this data.
 
 ### Features
 
