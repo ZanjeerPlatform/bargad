@@ -184,35 +184,45 @@ defmodule Bargad.Merkle do
 
   @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.tree
   def insert(tree = %Bargad.Trees.Tree{root: root,  size: size}, x) do
-    root = Bargad.Utils.get_node(tree, root)
-    l = :math.ceil(:math.log2(root.size))
-    
+    root =
+      tree
+      |> Bargad.Utils.get_node(root)
+      |> get_new_root(tree, x)
+
+    Bargad.Utils.set_node(tree, root.hash, root)
+    tree |> Map.put(:root, root.hash) |> Map.put(:size, size + 1)
+  end
+
+  defp get_new_root(root, tree = %Bargad.Trees.Tree{size: size}, x) do
+    l = root.size |> :math.log2() |> :math.ceil()
+
     if root.size == :math.pow(2,l) do
-      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
+      salted_node = tree.size + 1 |> Integer.to_string() |> Bargad.Utils.salt_node(x)
+      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, salted_node), [], 1, x)
       Bargad.Utils.set_node(tree, right.hash, right)
-      # basically don't delete the root if the tree contains only one node, and that would be a leaf node
-      if tree.size > 1 do
-        # deletes the existing root from the storage as there would be a new root
-        Bargad.Utils.delete_node(tree, root.hash)
-      end
-      root = Bargad.Utils.make_node(tree, root, right)
-      Bargad.Utils.set_node(tree,root.hash,root)
-      Map.put(tree, :root, root.hash) |> Map.put(:size, size + 1)
+
+      if tree.size > 1, do: Bargad.Utils.delete_node(tree, root.hash)
+      Bargad.Utils.make_node(tree, root, right)
     else
       [left, right] = root.children
       left = Bargad.Utils.get_node(tree, left)
       right = Bargad.Utils.get_node(tree, right)
-      if left.size < :math.pow(2,l-1) do
-        left = do_insert(tree, root, left, x, l-1,"L")
-      else
-        right = do_insert(tree, root, right, x, l-1,"R" )
-      end
-      # deletes the existing root from the storage as there would be a new root
+      boolean = left.size < :math.pow(2,l-1)
+      {left, right} = get_left_and_right_nodes(boolean, tree, root, left, right, x, l)
+
       Bargad.Utils.delete_node(tree, root.hash)
-      root = Bargad.Utils.make_node(tree, left, right)
-      Bargad.Utils.set_node(tree,root.hash,root)
-      Map.put(tree, :root, root.hash) |> Map.put(:size, size + 1)
+      Bargad.Utils.make_node(tree, left, right)
     end
+  end
+
+  defp get_left_and_right_nodes(true, tree, root, left, right, x, l) do
+    left = do_insert(tree, root, left, x, l-1,"L")
+    {left, right}
+  end
+
+  defp get_left_and_right_nodes(false, tree, root, left, right, x, l) do
+    right = do_insert(tree, root, right, x, l-1,"R")
+    {left, right}
   end
 
   defp do_insert(tree, parent, left = %Bargad.Nodes.Node{children: []}, _, _, "L")  do
@@ -222,31 +232,11 @@ defmodule Bargad.Merkle do
     node
   end
 
-  defp do_insert(tree, _, left = %Bargad.Nodes.Node{children: []}, x, _, "R")  do
+  defp do_insert(tree, _, left, x, _, "R")  do
     right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
     Bargad.Utils.set_node(tree,right.hash,right)
     node = Bargad.Utils.make_node(tree, left, right)
     Bargad.Utils.set_node(tree,node.hash,node)
     node
   end
-
-  defp do_insert(tree, _, root = %Bargad.Nodes.Node{children: [left, right]}, x, l, _)  do
-    left = Bargad.Utils.get_node(tree, left)
-    right = Bargad.Utils.get_node(tree, right)
-    if left.size < :math.pow(2,l-1) do
-      left = do_insert(tree, root, left, x, l-1,"L")
-      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
-      Bargad.Utils.set_node(tree,right.hash,right)
-    else
-      right = do_insert(tree, root, right, x, l-1,"R")
-    end
-
-    # deletes the existing root from the storage as there would be a new root
-    Bargad.Utils.delete_node(tree, root.hash)
-
-    node = Bargad.Utils.make_node(tree, left, right)
-    Bargad.Utils.set_node(tree,node.hash,node)
-    node
-  end
-
 end
