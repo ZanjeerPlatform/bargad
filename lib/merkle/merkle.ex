@@ -202,11 +202,7 @@ defmodule Bargad.Merkle do
       [left, right] = root.children
       left = Bargad.Utils.get_node(tree, left)
       right = Bargad.Utils.get_node(tree, right)
-      if left.size < :math.pow(2,l-1) do
-        left = do_insert(tree, root, left, x, l-1,"L")
-      else
-        right = do_insert(tree, root, right, x, l-1,"R" )
-      end
+      right = do_insert(tree, root, right, x, l-1,"R")
       # deletes the existing root from the storage as there would be a new root
       Bargad.Utils.delete_node(tree, root.hash)
       root = Bargad.Utils.make_node(tree, left, right)
@@ -233,12 +229,15 @@ defmodule Bargad.Merkle do
   defp do_insert(tree, _, root = %Bargad.Nodes.Node{children: [left, right]}, x, l, _)  do
     left = Bargad.Utils.get_node(tree, left)
     right = Bargad.Utils.get_node(tree, right)
+    {left, right} = 
     if left.size < :math.pow(2,l-1) do
       left = do_insert(tree, root, left, x, l-1,"L")
       right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
       Bargad.Utils.set_node(tree,right.hash,right)
+      {left, right}
     else
       right = do_insert(tree, root, right, x, l-1,"R")
+      {left, right}
     end
 
     # deletes the existing root from the storage as there would be a new root
