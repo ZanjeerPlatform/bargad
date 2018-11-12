@@ -71,6 +71,9 @@ defmodule BargadTest do
   @h1_2_3_4_5_6_7 <<242, 197, 53, 19, 5, 23, 59, 126, 216, 253, 60, 14, 220, 187, 235, 206, 193,
   104, 171, 235, 234, 162, 59, 47, 40, 81, 108, 128, 53, 229, 27, 132>>
 
+  @h1_2_3_4_5_6_7_8 <<252, 205, 10, 42, 9, 31, 194, 189, 55, 189, 196, 176, 70, 114, 108, 45, 87,
+    121, 237, 12, 52, 66, 176, 141, 146, 216, 207, 63, 41, 40, 87, 221>>
+
   @k0 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>
 
   @k1 <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1>>
@@ -209,13 +212,24 @@ defmodule BargadTest do
 
       assert tree.root == @h1_2_3_4_5_6_7
       assert tree.size == 7
-      
+
+    end
+
+    test "insert a node in a tree with 7 nodes" do
+
+      tree =
+        "FRZ"
+        |> Bargad.Log.build(:sha256, [{"module", "ETSBackend"}], ["1","2","3","4","5","6","7"])
+        |> Bargad.Log.insert("8")
+
+      assert tree.root == @h1_2_3_4_5_6_7_8
+      assert tree.size == 8
     end
 
   end
 
   describe "tree get operations" do
-    
+
     test "generate audit proof for a tree with 1 node" do
 
       tree = Bargad.Log.build("FRZ", :sha256, [{"module", "ETSBackend"}], ["1"])

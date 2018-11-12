@@ -184,11 +184,7 @@ defmodule Bargad.Merkle do
 
   @spec insert(Bargad.Types.tree, binary) :: Bargad.Types.tree
   def insert(tree = %Bargad.Trees.Tree{root: root,  size: size}, x) do
-    root =
-      tree
-      |> Bargad.Utils.get_node(root)
-      |> get_new_root(tree, x)
-
+    root = tree |> Bargad.Utils.get_node(root) |> get_new_root(tree, x)
     Bargad.Utils.set_node(tree, root.hash, root)
     tree |> Map.put(:root, root.hash) |> Map.put(:size, size + 1)
   end
@@ -197,26 +193,27 @@ defmodule Bargad.Merkle do
     l = root.size |> :math.log2() |> :math.ceil()
 
     if root.size == :math.pow(2,l) do
-      salted_node = tree.size + 1 |> Integer.to_string() |> Bargad.Utils.salt_node(x)
-      right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, salted_node), [], 1, x)
-      Bargad.Utils.set_node(tree, right.hash, right)
-
+      right = set_right_node(tree, x, "R")
       if tree.size > 1, do: Bargad.Utils.delete_node(tree, root.hash)
       Bargad.Utils.make_node(tree, root, right)
     else
-      [left, right] = root.children
-      left = Bargad.Utils.get_node(tree, left)
-      right = Bargad.Utils.get_node(tree, right)
-      boolean = left.size < :math.pow(2,l-1)
-      {left, right} = get_left_and_right_nodes(boolean, tree, root, left, right, x, l)
-
+      {left, right} = get_left_and_right_nodes(tree, root, x, l)
       Bargad.Utils.delete_node(tree, root.hash)
       Bargad.Utils.make_node(tree, left, right)
     end
   end
 
+  defp get_left_and_right_nodes(tree, root, x, l) do
+      [left, right] = root.children
+      left = Bargad.Utils.get_node(tree, left)
+      right = Bargad.Utils.get_node(tree, right)
+      boolean = left.size < :math.pow(2,l-1)
+      get_left_and_right_nodes(boolean, tree, root, left, right, x, l)
+  end
+
   defp get_left_and_right_nodes(true, tree, root, left, right, x, l) do
-    left = do_insert(tree, root, left, x, l-1,"L")
+    left  = do_insert(tree, root, left, x, l-1,"L")
+    right = set_right_node(tree, x, "R")
     {left, right}
   end
 
@@ -227,16 +224,28 @@ defmodule Bargad.Merkle do
 
   defp do_insert(tree, parent, left = %Bargad.Nodes.Node{children: []}, _, _, "L")  do
     right = Bargad.Utils.get_node(tree, List.last(parent.children))
+    node  = Bargad.Utils.make_node(tree, left, right)
+    Bargad.Utils.set_node(tree,node.hash,node)
+    node
+  end
+
+  defp do_insert(tree, _, left = %Bargad.Nodes.Node{children: []}, x, _, "R")  do
+    right = set_right_node(tree, x, "R")
     node = Bargad.Utils.make_node(tree, left, right)
     Bargad.Utils.set_node(tree,node.hash,node)
     node
   end
 
-  defp do_insert(tree, _, left, x, _, "R")  do
-    right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
-    Bargad.Utils.set_node(tree,right.hash,right)
+  defp do_insert(tree, _, root = %Bargad.Nodes.Node{children: [left, right]}, x, l, _)  do
+    {left, right}  = get_left_and_right_nodes(tree, root, x, l)
     node = Bargad.Utils.make_node(tree, left, right)
     Bargad.Utils.set_node(tree,node.hash,node)
     node
+  end
+
+  defp set_right_node(tree, x, "R") do
+    right = Bargad.Utils.make_node(tree, Bargad.Utils.make_hash(tree, tree.size + 1 |> Integer.to_string |> Bargad.Utils.salt_node(x)), [], 1, x)
+    Bargad.Utils.set_node(tree,right.hash,right)
+    right
   end
 end
