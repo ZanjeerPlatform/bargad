@@ -11,7 +11,7 @@ defmodule Bargad.MixProject do
       description: description(),
       package: package(),
       name: "Bargad",
-      source_url: "https://github.com/farazhaider/bargad",
+      source_url: "https://github.com/ZanjeerPlatform/bargad",
       docs: docs()
     ]
   end
@@ -98,7 +98,8 @@ defmodule Bargad.MixProject do
     [
       {:exprotobuf, "~> 1.2"},
       {:ex_doc, "~> 0.18.0", only: :dev, runtime: false},
-      {:elixir_uuid, "~> 1.2"}
+      {:elixir_uuid, "~> 1.2"},
+      {:csmt, "~> 1.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
     ]
